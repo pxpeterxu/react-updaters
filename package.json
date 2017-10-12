@@ -1,6 +1,6 @@
 {
   "name": "react-updaters",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Updaters and React handlers to change state and props preserving immutable semantics",
   "main": "dist/index.js",
   "repository": {
@@ -38,7 +38,6 @@
     "eslint-plugin-react": "^7.1.0"
   },
   "dependencies": {
-    "immutable": "*",
     "lodash": "~4",
     "react": "*"
   }

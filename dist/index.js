@@ -3,9 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.deleteMixed = exports.getMixed = exports.setMixed = undefined;
 exports.preventDefault = preventDefault;
 exports.stopPropagation = stopPropagation;
 exports.preventDefaultAndBlur = preventDefaultAndBlur;
+exports.set = set;
+exports.get = get;
+exports.deleteDeep = deleteDeep;
 exports.toggle = toggle;
 exports.toggleProp = toggleProp;
 exports.toggleValue = toggleValue;
@@ -46,10 +50,6 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _immutable = require('immutable');
-
-var _immutable2 = _interopRequireDefault(_immutable);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* eslint-disable prefer-rest-params */
@@ -73,155 +73,87 @@ function preventDefaultAndBlur(event) {
 }
 
 /**
- * Split a stateIndex path into two parts:
- * 1. Up to where the first immutable object is
- * 2. Everything after that
- * @param obj    object to look in
- * @param index  array of keys to look in obj
- * @note  this must be called with "this" bound correctly
- * @note  this assumes the mutable part comes first
- *        (e.g., with passing a React state object)
- */
-function splitMutableImmutable(obj, index) {
-  if (typeof index === 'string') {
-    index = index.split('.');
-  } else if (typeof index === 'number') {
-    index = [index];
-  }
-
-  var cur = obj;
-  var immutableParts = [];
-  var mutableParts = [];
-
-  for (var i = 0; i !== index.length; i++) {
-    if (_immutable2.default.Iterable.isIterable(cur)) {
-      // Everything after the current is mutable
-      immutableParts = index.slice(i);
-      break;
-    }
-    var part = index[i];
-    mutableParts.push(part);
-    cur = obj[part];
-  }
-
-  return {
-    mutable: mutableParts,
-    immutable: immutableParts
-  };
-}
-
-/**
- * Set a variable deep in a map that's potentially partly
- * immutable and partly not
+ * Set a variable deep in a map/array while preserving
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
  * @param withType    if specified, used with _.setWith; currently disabled
  * @return modified root obj
  */
-function setMixed(obj, stateIndex, value, withType) {
-  var keys = splitMutableImmutable(obj, stateIndex);
-  var hasMutable = !!keys.mutable.length;
-  var hasImmutable = !!keys.immutable.length;
-
-  var immutable = hasMutable ? _lodash2.default.get(obj, keys.mutable) : obj;
-  var curValue = hasImmutable ? immutable.getIn(keys.immutable) : immutable;
+function set(obj, keys, value, withType) {
+  var curValue = keys && keys.length !== 0 ? _lodash2.default.get(obj, keys) : obj;
   if (curValue === value) {
     // Prevent unneeded changes
     return obj;
   }
 
-  var toSet = hasImmutable ? immutable.setIn(keys.immutable, value) : value;
+  var keysSoFar = [];
 
-  if (hasMutable) {
-    var keysSoFar = [];
-
-    // Clone parents so that we still have good behavior
-    // with PureRenderMixin
-    obj = _lodash2.default.clone(obj);
-    for (var i = 0; i !== keys.mutable.length - 1; i++) {
-      var key = keys.mutable[i];
-      keysSoFar.push(key);
-      _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
-    }
-
-    if (!withType) {
-      _lodash2.default.set(obj, keys.mutable, toSet);
-    } else {
-      _lodash2.default.setWith(obj, keys.mutable, toSet, withType);
-    }
-    return obj;
-  } else {
-    // Purely immutable
-    return toSet;
+  // Clone parents so that we still have good behavior
+  // with PureRenderMixin
+  obj = _lodash2.default.clone(obj);
+  for (var i = 0; i !== keys.length - 1; i++) {
+    var key = keys[i];
+    keysSoFar.push(key);
+    _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
   }
+
+  if (!withType) {
+    _lodash2.default.set(obj, keys, value);
+  } else {
+    _lodash2.default.setWith(obj, keys, value, withType);
+  }
+
+  return obj;
 }
 
 /**
  * Get a variable deep in a map that's potentially partly
  * immutable and partly not
- * @param obj         object to get
- * @param stateIndex  path to the property to set
+ * @param obj   object to get
+ * @param keys  path to the property to get
  * @return value or undefined
  */
-function getMixed(obj, stateIndex) {
-  var keys = splitMutableImmutable(obj, stateIndex);
-  var hasMutable = !!keys.mutable.length;
-  var hasImmutable = !!keys.immutable.length;
-
-  var immutable = hasMutable ? _lodash2.default.get(obj, keys.mutable) : obj;
-  var value = hasImmutable ? immutable.getIn(keys.immutable) : immutable;
-
-  return value;
+function get(obj, keys) {
+  return _lodash2.default.get(obj, keys);
 }
 
 /**
  * Delete a variable deep in a map that's potentially partly
  * immutable and partly not
- * @param obj         object to delete in
- * @param stateIndex  path of item to delete
- * @return updated obj (with shallow copies to preserve immutable semantices)
+ * @param obj   object to delete in
+ * @param keys  path of item to delete
+ * @return updated obj (with shallow copies to preserve immutable semantics)
  */
-function deleteMixed(obj, stateIndex) {
-  var keys = splitMutableImmutable(obj, stateIndex);
-  var hasMutable = !!keys.mutable.length;
-  var hasImmutable = !!keys.immutable.length;
-  var immutable = hasMutable ? _lodash2.default.get(obj, keys.mutable) : obj;
-  var toSet = hasImmutable ? immutable.deleteIn(keys.immutable) : immutable;
+function deleteDeep(obj, keys) {
+  var keysSoFar = [];
 
-  if (hasMutable) {
-    var keysSoFar = [];
-
-    // Clone parents so that we still have good behavior
-    // with PureRenderMixin
-    obj = _lodash2.default.clone(obj);
-    for (var i = 0; i !== keys.mutable.length - 1; i++) {
-      var key = keys.mutable[i];
-      keysSoFar.push(key);
-      _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
-    }
-
-    if (hasImmutable) {
-      // The deletion took place in the immutable part
-      _lodash2.default.set(obj, keys.mutable, toSet);
-    } else {
-      // Use the second-to-last key to get the object to delete in
-      var deleteObjKey = keys.mutable.slice(0, -1);
-      var deleteObj = deleteObjKey.length !== 0 ? _lodash2.default.get(obj, deleteObjKey) : obj;
-      var deleteKey = keys.mutable[keys.mutable.length - 1];
-
-      if (deleteObj instanceof Array) {
-        deleteObj.splice(deleteKey, 1);
-      } else {
-        delete deleteObj[deleteKey];
-      }
-    }
-    return obj;
-  } else {
-    // Purely immutable
-    return toSet;
+  // Clone parents so that we still have good behavior
+  // with PureRenderMixin
+  obj = _lodash2.default.clone(obj);
+  for (var i = 0; i !== keys.length - 1; i++) {
+    var key = keys[i];
+    keysSoFar.push(key);
+    _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
   }
+
+  // Use the second-to-last key to get the object to delete in
+  var deleteObjKey = keys.slice(0, -1);
+  var deleteObj = deleteObjKey.length !== 0 ? _lodash2.default.get(obj, deleteObjKey) : obj;
+  var deleteKey = keys[keys.length - 1];
+
+  if (deleteObj instanceof Array) {
+    deleteObj.splice(deleteKey, 1);
+  } else {
+    delete deleteObj[deleteKey];
+  }
+
+  return obj;
 }
+
+var setMixed = exports.setMixed = set;
+var getMixed = exports.getMixed = get;
+var deleteMixed = exports.deleteMixed = deleteDeep;
 
 /**
  * Get an event handler that will toggle the value of the given
@@ -854,7 +786,12 @@ exports.default = {
   changeProp: changeProp,
 
   // Utility functions
+  // Legacy names
   setMixed: setMixed,
   getMixed: getMixed,
-  deleteMixed: deleteMixed
+  deleteMixed: deleteMixed,
+
+  set: set,
+  get: get,
+  deleteDeep: deleteDeep
 };

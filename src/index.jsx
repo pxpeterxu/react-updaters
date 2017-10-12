@@ -1,6 +1,5 @@
 import React from 'react';
 import _ from 'lodash';
-import Immutable from 'immutable';
 
 /* eslint-disable prefer-rest-params */
 
@@ -23,155 +22,87 @@ export function preventDefaultAndBlur(event) {
 }
 
 /**
- * Split a stateIndex path into two parts:
- * 1. Up to where the first immutable object is
- * 2. Everything after that
- * @param obj    object to look in
- * @param index  array of keys to look in obj
- * @note  this must be called with "this" bound correctly
- * @note  this assumes the mutable part comes first
- *        (e.g., with passing a React state object)
- */
-function splitMutableImmutable(obj, index) {
-  if (typeof index === 'string') {
-    index = index.split('.');
-  } else if (typeof index === 'number') {
-    index = [index];
-  }
-
-  let cur = obj;
-  let immutableParts = [];
-  const mutableParts = [];
-
-  for (let i = 0; i !== index.length; i++) {
-    if (Immutable.Iterable.isIterable(cur)) {
-      // Everything after the current is mutable
-      immutableParts = index.slice(i);
-      break;
-    }
-    const part = index[i];
-    mutableParts.push(part);
-    cur = obj[part];
-  }
-
-  return {
-    mutable: mutableParts,
-    immutable: immutableParts
-  };
-}
-
-/**
- * Set a variable deep in a map that's potentially partly
- * immutable and partly not
+ * Set a variable deep in a map/array while preserving
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
  * @param withType    if specified, used with _.setWith; currently disabled
  * @return modified root obj
  */
-function setMixed(obj, stateIndex, value, withType) {
-  const keys = splitMutableImmutable(obj, stateIndex);
-  const hasMutable = !!keys.mutable.length;
-  const hasImmutable = !!keys.immutable.length;
-
-  const immutable = hasMutable ? _.get(obj, keys.mutable) : obj;
-  const curValue = hasImmutable ? immutable.getIn(keys.immutable) : immutable;
+export function set(obj, keys, value, withType) {
+  const curValue = keys && keys.length !== 0 ? _.get(obj, keys) : obj;
   if (curValue === value) {
     // Prevent unneeded changes
     return obj;
   }
 
-  const toSet = hasImmutable ? immutable.setIn(keys.immutable, value) : value;
+  const keysSoFar = [];
 
-  if (hasMutable) {
-    const keysSoFar = [];
-
-    // Clone parents so that we still have good behavior
-    // with PureRenderMixin
-    obj = _.clone(obj);
-    for (let i = 0; i !== keys.mutable.length - 1; i++) {
-      const key = keys.mutable[i];
-      keysSoFar.push(key);
-      _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
-    }
-
-    if (!withType) {
-      _.set(obj, keys.mutable, toSet);
-    } else {
-      _.setWith(obj, keys.mutable, toSet, withType);
-    }
-    return obj;
-  } else {
-    // Purely immutable
-    return toSet;
+  // Clone parents so that we still have good behavior
+  // with PureRenderMixin
+  obj = _.clone(obj);
+  for (let i = 0; i !== keys.length - 1; i++) {
+    const key = keys[i];
+    keysSoFar.push(key);
+    _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
   }
+
+  if (!withType) {
+    _.set(obj, keys, value);
+  } else {
+    _.setWith(obj, keys, value, withType);
+  }
+
+  return obj;
 }
 
 /**
  * Get a variable deep in a map that's potentially partly
  * immutable and partly not
- * @param obj         object to get
- * @param stateIndex  path to the property to set
+ * @param obj   object to get
+ * @param keys  path to the property to get
  * @return value or undefined
  */
-function getMixed(obj, stateIndex) {
-  const keys = splitMutableImmutable(obj, stateIndex);
-  const hasMutable = !!keys.mutable.length;
-  const hasImmutable = !!keys.immutable.length;
-
-  const immutable = hasMutable ? _.get(obj, keys.mutable) : obj;
-  const value = hasImmutable ? immutable.getIn(keys.immutable) : immutable;
-
-  return value;
+export function get(obj, keys) {
+  return _.get(obj, keys);
 }
 
 /**
  * Delete a variable deep in a map that's potentially partly
  * immutable and partly not
- * @param obj         object to delete in
- * @param stateIndex  path of item to delete
- * @return updated obj (with shallow copies to preserve immutable semantices)
+ * @param obj   object to delete in
+ * @param keys  path of item to delete
+ * @return updated obj (with shallow copies to preserve immutable semantics)
  */
-function deleteMixed(obj, stateIndex) {
-  const keys = splitMutableImmutable(obj, stateIndex);
-  const hasMutable = !!keys.mutable.length;
-  const hasImmutable = !!keys.immutable.length;
-  const immutable = hasMutable ? _.get(obj, keys.mutable) : obj;
-  const toSet = hasImmutable ? immutable.deleteIn(keys.immutable) : immutable;
+export function deleteDeep(obj, keys) {
+  const keysSoFar = [];
 
-  if (hasMutable) {
-    const keysSoFar = [];
-
-    // Clone parents so that we still have good behavior
-    // with PureRenderMixin
-    obj = _.clone(obj);
-    for (let i = 0; i !== keys.mutable.length - 1; i++) {
-      const key = keys.mutable[i];
-      keysSoFar.push(key);
-      _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
-    }
-
-    if (hasImmutable) {
-      // The deletion took place in the immutable part
-      _.set(obj, keys.mutable, toSet);
-    } else {
-      // Use the second-to-last key to get the object to delete in
-      const deleteObjKey = keys.mutable.slice(0, -1);
-      const deleteObj = deleteObjKey.length !== 0 ? _.get(obj, deleteObjKey) : obj;
-      const deleteKey = keys.mutable[keys.mutable.length - 1];
-
-      if (deleteObj instanceof Array) {
-        deleteObj.splice(deleteKey, 1);
-      } else {
-        delete deleteObj[deleteKey];
-      }
-    }
-    return obj;
-  } else {
-    // Purely immutable
-    return toSet;
+  // Clone parents so that we still have good behavior
+  // with PureRenderMixin
+  obj = _.clone(obj);
+  for (let i = 0; i !== keys.length - 1; i++) {
+    const key = keys[i];
+    keysSoFar.push(key);
+    _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
   }
+
+  // Use the second-to-last key to get the object to delete in
+  const deleteObjKey = keys.slice(0, -1);
+  const deleteObj = deleteObjKey.length !== 0 ? _.get(obj, deleteObjKey) : obj;
+  const deleteKey = keys[keys.length - 1];
+
+  if (deleteObj instanceof Array) {
+    deleteObj.splice(deleteKey, 1);
+  } else {
+    delete deleteObj[deleteKey];
+  }
+
+  return obj;
 }
+
+export const setMixed = set;
+export const getMixed = get;
+export const deleteMixed = deleteDeep;
 
 /**
  * Get an event handler that will toggle the value of the given
@@ -815,7 +746,12 @@ export default {
   changeProp: changeProp,
 
   // Utility functions
+  // Legacy names
   setMixed: setMixed,
   getMixed: getMixed,
-  deleteMixed: deleteMixed
+  deleteMixed: deleteMixed,
+
+  set: set,
+  get: get,
+  deleteDeep: deleteDeep,
 };
