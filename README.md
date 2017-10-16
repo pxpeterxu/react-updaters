@@ -563,7 +563,7 @@ import { registerRef } from 'react-updaters';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { preventDefault } from 'react-updaters';
 
-<OverlayTrigger overlay={<Tooltip>I'm a tooltip!</Tooltip>}>
+<OverlayTrigger overlay={<Tooltip>This is a tooltip!</Tooltip>}>
   <a href="#" onClick={preventDefault}>Hover to show tooltip</a>
 </OverlayTrigger>
 ```
