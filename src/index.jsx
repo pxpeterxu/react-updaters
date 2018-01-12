@@ -562,9 +562,9 @@ export function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, 
     if (preventDefault) preventDefaultAndBlur(e);
 
     let newPropObj = null;
-    if (propIndex) {
+    if (propIndex != null) {
       const curPropObj = getMixed(elem.props, propIndex);
-      if (indexInProp) {
+      if (indexInProp != null) {
         const curValue = getMixed(curPropObj, indexInProp);
         const newValue = getNewValue(curValue, e);
         newPropObj = setMixed(curPropObj, indexInProp, newValue);
