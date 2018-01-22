@@ -22,7 +22,7 @@ export function preventDefaultAndBlur(event) {
 }
 
 /**
- * Set a variable deep in a map/array while preserving
+ * Set a variable deep in a map/array while preserving immutable semantics
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
@@ -30,6 +30,8 @@ export function preventDefaultAndBlur(event) {
  * @return modified root obj
  */
 export function set(obj, keys, value, withType) {
+  if (!(keys instanceof Array)) keys = [keys];
+
   const curValue = keys && keys.length !== 0 ? _.get(obj, keys) : obj;
   if (curValue === value) {
     // Prevent unneeded changes
@@ -75,6 +77,8 @@ export function get(obj, keys) {
  * @return updated obj (with shallow copies to preserve immutable semantics)
  */
 export function deleteDeep(obj, keys) {
+  if (!(keys instanceof Array)) keys = [keys];
+
   const keysSoFar = [];
 
   // Clone parents so that we still have good behavior

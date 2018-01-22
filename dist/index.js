@@ -73,7 +73,7 @@ function preventDefaultAndBlur(event) {
 }
 
 /**
- * Set a variable deep in a map/array while preserving
+ * Set a variable deep in a map/array while preserving immutable semantics
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
@@ -81,6 +81,8 @@ function preventDefaultAndBlur(event) {
  * @return modified root obj
  */
 function set(obj, keys, value, withType) {
+  if (!(keys instanceof Array)) keys = [keys];
+
   var curValue = keys && keys.length !== 0 ? _lodash2.default.get(obj, keys) : obj;
   if (curValue === value) {
     // Prevent unneeded changes
@@ -126,6 +128,8 @@ function get(obj, keys) {
  * @return updated obj (with shallow copies to preserve immutable semantics)
  */
 function deleteDeep(obj, keys) {
+  if (!(keys instanceof Array)) keys = [keys];
+
   var keysSoFar = [];
 
   // Clone parents so that we still have good behavior
@@ -610,9 +614,9 @@ function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, prevent
     if (preventDefault) preventDefaultAndBlur(e);
 
     var newPropObj = null;
-    if (propIndex) {
+    if (propIndex != null) {
       var curPropObj = getMixed(elem.props, propIndex);
-      if (indexInProp) {
+      if (indexInProp != null) {
         var curValue = getMixed(curPropObj, indexInProp);
         var newValue = getNewValue(curValue, e);
         newPropObj = setMixed(curPropObj, indexInProp, newValue);
