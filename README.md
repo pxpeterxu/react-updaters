@@ -96,7 +96,9 @@ class MyComponent extends React.PureComponent {
     expandable panels (accordion panels).
   * [`toggleFromEvent(elem, stateIndex[, preventDefault]`](#toggleFromEvent): toggles a certain key
     in state between `null` and the value in the event/call to the handler.
-
+  * [`toggleArrayMember(elem, stateIndex, value[, preventDefault]`](#toggleArrayMember):
+    toggles whether a certain value is in an array in `props`. This is useful
+    for arrays where you want to add/remove members based on clicks.
 
 * Update props for controlled components (through an `onChange` handler within the props). These
   are analogous to the ones for `state` above:
@@ -122,6 +124,9 @@ class MyComponent extends React.PureComponent {
   * [`togglePropFromEvent(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#togglePropFromEvent):
     toggles a certain key in props between `null` and the value in the event/call
     to the handler.
+  * [`togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#toggleArrayMember):
+    toggles whether a certain value is in an array in `props`. This is useful
+    for arrays where you want to add/remove members based on clicks.
 
 * Calls functions on either the current component or a prop:
   * [`call(elem, funcName, prefixArgs[, preventDefault, extraCacheKey])`](#call): calls
@@ -292,6 +297,41 @@ render() {
 }
 ```
 
+#### <a id="toggleArrayMember"></a> `toggleArrayMember(elem, stateIndex, value[, preventDefault])`
+
+**Description**: toggles whether a certain array in state contains a given value.
+This is useful for arrays where each values' membership in the array is controlled
+by a checkbox, for example.
+
+**Example**
+
+```js
+import { PanelGroup } from 'react-bootstrap';
+import { toggleArrayMember } from 'react-updaters';
+
+class ToppingsSelect extends React.Component {
+  constructor() {
+    this.state = { toppings: ['pineapples'] };
+  }
+
+  render() {
+    const { toppings } = this.state;
+
+    return (<div>
+      {['anchovies', 'canadian bacon', 'mushrooms', 'peppers', 'pineapples'].map(option => (<div>
+        <input
+          type="checkbox"
+          checked={toppings.indexOf(option) !== -1}
+          onChange={toggleArrayMember(this, 'toppings', option)}
+        />
+        {' '}
+        {option}
+      </div>))}
+    </div>);
+  }
+}
+```
+
 ### Props updaters
 
 In general, props updaters have the same few arguments:
@@ -454,6 +494,47 @@ render() {
       <Panel eventKey="Batman" ... />
     </PanelGroup>
   );
+}
+```
+
+#### <a id="togglePropArrayMember"></a> `togglePropArrayMember(elem, stateIndex, value[, preventDefault])`
+
+**Description**: toggles whether a certain array in props contains a given value.
+This is useful for arrays where each values' membership in the array is controlled
+by a checkbox, for example.
+
+**Example**
+
+```js
+import { PanelGroup } from 'react-bootstrap';
+import { togglePropArrayMember } from 'react-updaters';
+
+type Pizza = {
+  toppings: Array<string>,
+  size: 'small' | 'medium' | 'large',
+};
+
+type Props = {
+  pizza: Pizza,
+  onChange: Pizza => mixed,
+};
+
+class ToppingsSelect extends React.Component {
+  render() {
+    const toppings = this.props.pizza.toppings;
+
+    return (<div>
+      {['anchovies', 'canadian bacon', 'mushrooms', 'peppers', 'pineapples'].map(option => (<div>
+        <input
+          type="checkbox"
+          checked={toppings.indexOf(option) !== -1}
+          onChange={togglePropArrayMember(this, 'onChange', 'pizza', 'toppings', option)}
+        />
+        {' '}
+        {option}
+      </div>))}
+    </div>);
+  }
 }
 ```
 

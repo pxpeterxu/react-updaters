@@ -191,6 +191,30 @@ export function togglePropFromEvent(elem, propFunc, propIndex, indexInProp, valu
 }
 
 /**
+ * Get an event handler that will toggle whether a value is present
+ * in an array at the given state key (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param value           value to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+export function toggleArrayMember(elem, stateIndex, value, preventDefault) {
+  return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership', value]);
+}
+
+/**
+ * Get an event handler that will toggle whether a value is present
+ * in an array at the given prop key (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param value           value to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+export function togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
+  return changeProp(elem, propFunc, propIndex, indexInProp, toggleMembership(value), preventDefault, ['toggleMembership', value]);
+}
+
+/**
  * Get an event handler that will set the value of a prop
  * based on the information given
  * @param elem            React element; usually "this"
@@ -518,6 +542,22 @@ export function remove(indexToDelete) {
 }
 
 /**
+ * Generator of a getNewValue (updater) function that
+ * adds or splices an element from an array based on
+ * whether it's in the array already
+ */
+export function toggleMembership(value) {
+  return function(curValue) {
+    const index = curValue.indexOf(value);
+    if (index === -1) {
+      return curValue.concat([value]);
+    } else {
+      return curValue.filter(val => val !== value);
+    }
+  };
+}
+
+/**
  * getNewValue (updater) function that negates the value
  */
 export function negate(curValue) {
@@ -717,9 +757,11 @@ export default {
   toggle: toggle,
   toggleValue: toggleValue,
   toggleFromEvent: toggleFromEvent,
+  toggleArrayMember: toggleArrayMember,
   toggleProp: toggleProp,
   togglePropValue: togglePropValue,
   togglePropFromEvent: togglePropFromEvent,
+  togglePropArrayMember: togglePropArrayMember,
   setProp: setProp,
   setPropNumber: setPropNumber,
   setPropValue: setPropValue,

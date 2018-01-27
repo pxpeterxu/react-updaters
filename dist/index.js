@@ -16,6 +16,8 @@ exports.toggleValue = toggleValue;
 exports.togglePropValue = togglePropValue;
 exports.toggleFromEvent = toggleFromEvent;
 exports.togglePropFromEvent = togglePropFromEvent;
+exports.toggleArrayMember = toggleArrayMember;
+exports.togglePropArrayMember = togglePropArrayMember;
 exports.setProp = setProp;
 exports.setPropNumber = setPropNumber;
 exports.setPropValue = setPropValue;
@@ -33,6 +35,7 @@ exports.fromEvent = fromEvent;
 exports.numberFromEvent = numberFromEvent;
 exports.constant = constant;
 exports.remove = remove;
+exports.toggleMembership = toggleMembership;
 exports.negate = negate;
 exports.toggleConstant = toggleConstant;
 exports.setOrNull = setOrNull;
@@ -237,6 +240,30 @@ function toggleFromEvent(elem, stateIndex, preventDefault) {
  */
 function togglePropFromEvent(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
   return changeProp(elem, propFunc, propIndex, indexInProp, setOrNull, preventDefault, 'setOrNull');
+}
+
+/**
+ * Get an event handler that will toggle whether a value is present
+ * in an array at the given state key (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param value           value to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+function toggleArrayMember(elem, stateIndex, value, preventDefault) {
+  return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership', value]);
+}
+
+/**
+ * Get an event handler that will toggle whether a value is present
+ * in an array at the given prop key (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param value           value to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+function togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
+  return changeProp(elem, propFunc, propIndex, indexInProp, toggleMembership(value), preventDefault, ['toggleMembership', value]);
 }
 
 /**
@@ -568,6 +595,24 @@ function remove(indexToDelete) {
 }
 
 /**
+ * Generator of a getNewValue (updater) function that
+ * adds or splices an element from an array based on
+ * whether it's in the array already
+ */
+function toggleMembership(value) {
+  return function (curValue) {
+    var index = curValue.indexOf(value);
+    if (index === -1) {
+      return curValue.concat([value]);
+    } else {
+      return curValue.filter(function (val) {
+        return val !== value;
+      });
+    }
+  };
+}
+
+/**
  * getNewValue (updater) function that negates the value
  */
 function negate(curValue) {
@@ -757,9 +802,11 @@ exports.default = {
   toggle: toggle,
   toggleValue: toggleValue,
   toggleFromEvent: toggleFromEvent,
+  toggleArrayMember: toggleArrayMember,
   toggleProp: toggleProp,
   togglePropValue: togglePropValue,
   togglePropFromEvent: togglePropFromEvent,
+  togglePropArrayMember: togglePropArrayMember,
   setProp: setProp,
   setPropNumber: setPropNumber,
   setPropValue: setPropValue,
