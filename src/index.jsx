@@ -30,7 +30,7 @@ export function preventDefaultAndBlur(event) {
  * @return modified root obj
  */
 export function set(obj, keys, value, withType) {
-  if (!(keys instanceof Array)) keys = [keys];
+  if (typeof keys === 'string') keys = keys.split('.');
 
   const curValue = keys && keys.length !== 0 ? _.get(obj, keys) : obj;
   if (curValue === value) {
