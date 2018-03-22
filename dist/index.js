@@ -85,6 +85,7 @@ function preventDefaultAndBlur(event) {
  */
 function set(obj, keys, value, withType) {
   if (typeof keys === 'string') keys = keys.split('.');
+  if (!(keys instanceof Array)) keys = [keys];
 
   var curValue = keys && keys.length !== 0 ? _lodash2.default.get(obj, keys) : obj;
   if (curValue === value) {
