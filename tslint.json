@@ -1,0 +1,27 @@
+{
+  "extends": "tslint-config-airbnb",
+  "rules": {
+    "ter-arrow-parens": [true, "as-needed"],
+    "import-name": false,
+    "object-shorthand-properties-first": false,
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-pascal-case"
+    ],
+    "semicolon": [true, "always", "ignore-bound-class-methods"],
+    "max-line-length": false,
+    "ter-indent": false,
+    "no-parameter-reassignment": false,
+    "no-increment-decrement": false,
+    "no-else-after-return": false,
+    "align": false,
+    "ter-func-call-spacing": false,
+    "space-before-function-paren": false,
+    "prefer-template": false
+  },
+  "linterOptions": {
+    "exclude": ["**/*.json"]
+  }
+}

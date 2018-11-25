@@ -1,80 +1,41 @@
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.deleteMixed = exports.getMixed = exports.setMixed = undefined;
-exports.preventDefault = preventDefault;
-exports.stopPropagation = stopPropagation;
-exports.preventDefaultAndBlur = preventDefaultAndBlur;
-exports.set = set;
-exports.get = get;
-exports.deleteDeep = deleteDeep;
-exports.toggle = toggle;
-exports.toggleProp = toggleProp;
-exports.toggleValue = toggleValue;
-exports.togglePropValue = togglePropValue;
-exports.toggleFromEvent = toggleFromEvent;
-exports.togglePropFromEvent = togglePropFromEvent;
-exports.toggleArrayMember = toggleArrayMember;
-exports.togglePropArrayMember = togglePropArrayMember;
-exports.setProp = setProp;
-exports.setPropNumber = setPropNumber;
-exports.setPropValue = setPropValue;
-exports.deleteProp = deleteProp;
-exports.update = update;
-exports.updateNumber = updateNumber;
-exports.setState = setState;
-exports.deleteState = deleteState;
-exports.getChanged = getChanged;
-exports.getThen = getThen;
-exports.getCatch = getCatch;
-exports.renderResponse = renderResponse;
-exports.all = all;
-exports.fromEvent = fromEvent;
-exports.numberFromEvent = numberFromEvent;
-exports.constant = constant;
-exports.remove = remove;
-exports.toggleMembership = toggleMembership;
-exports.negate = negate;
-exports.toggleConstant = toggleConstant;
-exports.setOrNull = setOrNull;
-exports.changeProp = changeProp;
-exports.changeState = changeState;
-exports.call = call;
-exports.callProp = callProp;
-exports.registerRef = registerRef;
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _lodash = require('lodash');
-
-var _lodash2 = _interopRequireDefault(_lodash);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importDefault(require("react"));
+const lodash_1 = __importDefault(require("lodash"));
 /* eslint-disable prefer-rest-params */
-
 function preventDefault(event) {
-  if (event) event.preventDefault();
+    if (event)
+        event.preventDefault();
 }
-
+exports.preventDefault = preventDefault;
 function stopPropagation(event) {
-  if (event) event.stopPropagation();
+    if (event)
+        event.stopPropagation();
 }
-
+exports.stopPropagation = stopPropagation;
 function preventDefaultAndBlur(event) {
-  if (event && event.preventDefault) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.target) {
-      event.target.blur();
+    if (event && event.preventDefault) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.target) {
+            event.target.blur();
+        }
     }
-  }
 }
-
+exports.preventDefaultAndBlur = preventDefaultAndBlur;
+function getValueFromEventOrValue(e) {
+    return e && e.target ? e.target.value : e;
+}
+function normalizeKeys(keys) {
+    if (typeof keys === 'string')
+        keys = keys.split('.');
+    if (!(keys instanceof Array))
+        keys = [keys];
+    return keys;
+}
 /**
  * Set a variable deep in a map/array while preserving immutable semantics
  * @param obj         object to set
@@ -84,35 +45,30 @@ function preventDefaultAndBlur(event) {
  * @return modified root obj
  */
 function set(obj, keys, value, withType) {
-  if (typeof keys === 'string') keys = keys.split('.');
-  if (!(keys instanceof Array)) keys = [keys];
-
-  var curValue = keys && keys.length !== 0 ? _lodash2.default.get(obj, keys) : obj;
-  if (curValue === value) {
-    // Prevent unneeded changes
+    keys = normalizeKeys(keys);
+    const curValue = keys && keys.length !== 0 ? lodash_1.default.get(obj, keys) : obj;
+    if (curValue === value) {
+        // Prevent unneeded changes
+        return obj;
+    }
+    const keysSoFar = [];
+    // Clone parents so that we still have good behavior
+    // with PureRenderMixin
+    obj = lodash_1.default.clone(obj);
+    for (let i = 0; i !== keys.length - 1; i++) {
+        const key = keys[i];
+        keysSoFar.push(key);
+        lodash_1.default.set(obj, keysSoFar, lodash_1.default.clone(lodash_1.default.get(obj, keysSoFar)));
+    }
+    if (!withType) {
+        lodash_1.default.set(obj, keys, value);
+    }
+    else {
+        lodash_1.default.setWith(obj, keys, value, withType);
+    }
     return obj;
-  }
-
-  var keysSoFar = [];
-
-  // Clone parents so that we still have good behavior
-  // with PureRenderMixin
-  obj = _lodash2.default.clone(obj);
-  for (var i = 0; i !== keys.length - 1; i++) {
-    var key = keys[i];
-    keysSoFar.push(key);
-    _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
-  }
-
-  if (!withType) {
-    _lodash2.default.set(obj, keys, value);
-  } else {
-    _lodash2.default.setWith(obj, keys, value, withType);
-  }
-
-  return obj;
 }
-
+exports.set = set;
 /**
  * Get a variable deep in a map that's potentially partly
  * immutable and partly not
@@ -121,9 +77,9 @@ function set(obj, keys, value, withType) {
  * @return value or undefined
  */
 function get(obj, keys) {
-  return _lodash2.default.get(obj, keys);
+    return lodash_1.default.get(obj, keys);
 }
-
+exports.get = get;
 /**
  * Delete a variable deep in a map that's potentially partly
  * immutable and partly not
@@ -132,37 +88,35 @@ function get(obj, keys) {
  * @return updated obj (with shallow copies to preserve immutable semantics)
  */
 function deleteDeep(obj, keys) {
-  if (!(keys instanceof Array)) keys = [keys];
-
-  var keysSoFar = [];
-
-  // Clone parents so that we still have good behavior
-  // with PureRenderMixin
-  obj = _lodash2.default.clone(obj);
-  for (var i = 0; i !== keys.length - 1; i++) {
-    var key = keys[i];
-    keysSoFar.push(key);
-    _lodash2.default.set(obj, keysSoFar, _lodash2.default.clone(_lodash2.default.get(obj, keysSoFar)));
-  }
-
-  // Use the second-to-last key to get the object to delete in
-  var deleteObjKey = keys.slice(0, -1);
-  var deleteObj = deleteObjKey.length !== 0 ? _lodash2.default.get(obj, deleteObjKey) : obj;
-  var deleteKey = keys[keys.length - 1];
-
-  if (deleteObj instanceof Array) {
-    deleteObj.splice(deleteKey, 1);
-  } else {
-    delete deleteObj[deleteKey];
-  }
-
-  return obj;
+    keys = normalizeKeys(keys);
+    const keysSoFar = [];
+    // Clone parents so that we still have good behavior
+    // with PureRenderMixin
+    obj = lodash_1.default.clone(obj);
+    for (let i = 0; i !== keys.length - 1; i++) {
+        const key = keys[i];
+        keysSoFar.push(key);
+        lodash_1.default.set(obj, keysSoFar, lodash_1.default.clone(lodash_1.default.get(obj, keysSoFar)));
+    }
+    // Use the second-to-last key to get the object to delete in
+    const deleteObjKey = keys.slice(0, -1);
+    const deleteObj = deleteObjKey.length !== 0 ? lodash_1.default.get(obj, deleteObjKey) : obj;
+    const deleteKey = keys[keys.length - 1];
+    if (deleteObj instanceof Array) {
+        if (typeof deleteKey !== 'number') {
+            throw new Error(`We expected a number for the key to delete in an array (in deleteDeep), but got a ${typeof deleteKey} ("${deleteKey.toString()}")`);
+        }
+        deleteObj.splice(deleteKey, 1);
+    }
+    else {
+        delete deleteObj[deleteKey];
+    }
+    return obj;
 }
-
-var setMixed = exports.setMixed = set;
-var getMixed = exports.getMixed = get;
-var deleteMixed = exports.deleteMixed = deleteDeep;
-
+exports.deleteDeep = deleteDeep;
+exports.setMixed = set;
+exports.getMixed = get;
+exports.deleteMixed = deleteDeep;
 /**
  * Get an event handler that will toggle the value of the given
  * state key given by path
@@ -171,9 +125,9 @@ var deleteMixed = exports.deleteMixed = deleteDeep;
  * @param preventDefault  whether to preventDefault
  */
 function toggle(elem, stateIndex, preventDefault) {
-  return changeState(elem, stateIndex, negate, preventDefault, 'negate');
+    return changeState(elem, stateIndex, negate, preventDefault, 'negate');
 }
-
+exports.toggle = toggle;
 /**
  * Get an event handler that will toggle the value of the given
  * prop key given by path using the propFunc
@@ -185,9 +139,9 @@ function toggle(elem, stateIndex, preventDefault) {
  * @param preventDefault  whether to preventDefault
  */
 function toggleProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, negate, preventDefault, 'negate');
+    return changeProp(elem, propFunc, propIndex, indexInProp, negate, preventDefault, 'negate');
 }
-
+exports.toggleProp = toggleProp;
 /**
  * Get an event handler that will toggle the value of the given
  * state key to either the value given or null
@@ -197,9 +151,12 @@ function toggleProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
  * @param preventDefault  whether to preventDefault
  */
 function toggleValue(elem, stateIndex, value, preventDefault) {
-  return changeState(elem, stateIndex, toggleConstant(value), preventDefault, ['toggleConstant', value]);
+    return changeState(elem, stateIndex, toggleConstant(value), preventDefault, [
+        'toggleConstant',
+        value,
+    ]);
 }
-
+exports.toggleValue = toggleValue;
 /**
  * Get an event handler that will toggle the value of the given
  * prop key given by path using the propFunc
@@ -212,9 +169,9 @@ function toggleValue(elem, stateIndex, value, preventDefault) {
  * @param preventDefault  whether to preventDefault
  */
 function togglePropValue(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, toggleConstant(value), preventDefault, ['toggleConstant', value]);
+    return changeProp(elem, propFunc, propIndex, indexInProp, toggleConstant(value), preventDefault, ['toggleConstant', value]);
 }
-
+exports.togglePropValue = togglePropValue;
 /**
  * Get an event handler that will toggle the value of the given
  * state key given by path to either the value passed (if it's
@@ -224,9 +181,9 @@ function togglePropValue(elem, propFunc, propIndex, indexInProp, value, preventD
  * @param preventDefault  whether to preventDefault
  */
 function toggleFromEvent(elem, stateIndex, preventDefault) {
-  return changeState(elem, stateIndex, setOrNull, preventDefault, 'setOrNull');
+    return changeState(elem, stateIndex, setOrNull, preventDefault, 'setOrNull');
 }
-
+exports.toggleFromEvent = toggleFromEvent;
 /**
  * Get an event handler that will toggle the value of the given
  * prop key given by path using the propFunc to:
@@ -240,9 +197,9 @@ function toggleFromEvent(elem, stateIndex, preventDefault) {
  * @param preventDefault  whether to preventDefault
  */
 function togglePropFromEvent(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, setOrNull, preventDefault, 'setOrNull');
+    return changeProp(elem, propFunc, propIndex, indexInProp, setOrNull, preventDefault, 'setOrNull');
 }
-
+exports.togglePropFromEvent = togglePropFromEvent;
 /**
  * Get an event handler that will toggle whether a value is present
  * in an array at the given state key (by adding or removing it)
@@ -252,9 +209,9 @@ function togglePropFromEvent(elem, propFunc, propIndex, indexInProp, value, prev
  * @param preventDefault  whether to preventDefault
  */
 function toggleArrayMember(elem, stateIndex, value, preventDefault) {
-  return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership', value]);
+    return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership', value]);
 }
-
+exports.toggleArrayMember = toggleArrayMember;
 /**
  * Get an event handler that will toggle whether a value is present
  * in an array at the given prop key (by adding or removing it)
@@ -264,9 +221,9 @@ function toggleArrayMember(elem, stateIndex, value, preventDefault) {
  * @param preventDefault  whether to preventDefault
  */
 function togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, toggleMembership(value), preventDefault, ['toggleMembership', value]);
+    return changeProp(elem, propFunc, propIndex, indexInProp, toggleMembership(value), preventDefault, ['toggleMembership', value]);
 }
-
+exports.togglePropArrayMember = togglePropArrayMember;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information given
@@ -279,9 +236,9 @@ function togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value, pr
  * @return function to handle events or values being changed
  */
 function setProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, fromEvent, preventDefault, 'fromEvent');
+    return changeProp(elem, propFunc, propIndex, indexInProp, fromEvent, preventDefault, 'fromEvent');
 }
-
+exports.setProp = setProp;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information from an event
@@ -295,9 +252,9 @@ function setProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
  * @return function to handle events or values being changed
  */
 function setPropNumber(elem, propFunc, propIndex, indexInProp, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, numberFromEvent, preventDefault, 'numberFromEvent');
+    return changeProp(elem, propFunc, propIndex, indexInProp, numberFromEvent, preventDefault, 'numberFromEvent');
 }
-
+exports.setPropNumber = setPropNumber;
 /**
  * Get an event handler that will set the value of a prop
  * to a set value
@@ -311,9 +268,9 @@ function setPropNumber(elem, propFunc, propIndex, indexInProp, preventDefault) {
  * @return function to handle events or values being changed
  */
 function setPropValue(elem, propFunc, propIndex, indexInProp, value, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, indexInProp, constant(value), preventDefault, ['constant', value]);
+    return changeProp(elem, propFunc, propIndex, indexInProp, constant(value), preventDefault, ['constant', value]);
 }
-
+exports.setPropValue = setPropValue;
 /**
  * Get an event handler that will delete a certain key from a prop
  * and then call an onChange handler; works for both arrays and
@@ -327,9 +284,9 @@ function setPropValue(elem, propFunc, propIndex, indexInProp, value, preventDefa
  * @return function to handle events or values being changed
  */
 function deleteProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
-  return changeProp(elem, propFunc, propIndex, null, remove(indexInProp), preventDefault, ['remove', indexInProp]);
+    return changeProp(elem, propFunc, propIndex, null, remove(indexInProp), preventDefault, ['remove', indexInProp]);
 }
-
+exports.deleteProp = deleteProp;
 /**
  * Get a function that will update a part of the current element's
  * state based on the stateIndex passed
@@ -338,9 +295,9 @@ function deleteProp(elem, propFunc, propIndex, indexInProp, preventDefault) {
  * @param preventDefault  whether to preventDefault on the event
  */
 function update(elem, stateIndex, preventDefault) {
-  return changeState(elem, stateIndex, fromEvent, preventDefault, 'fromEvent');
+    return changeState(elem, stateIndex, fromEvent, preventDefault, 'fromEvent');
 }
-
+exports.update = update;
 /**
  * Get a function that will update a part of the current element's
  * state based on the stateIndex passed to a numeric (or null) value
@@ -349,9 +306,9 @@ function update(elem, stateIndex, preventDefault) {
  * @param preventDefault  whether to preventDefault on the event
  */
 function updateNumber(elem, stateIndex, preventDefault) {
-  return changeState(elem, stateIndex, numberFromEvent, preventDefault, 'numberFromEvent');
+    return changeState(elem, stateIndex, numberFromEvent, preventDefault, 'numberFromEvent');
 }
-
+exports.updateNumber = updateNumber;
 /**
  * Get a function that will set the state for a certain element
  * @param elem            React element; usually "this"
@@ -360,9 +317,12 @@ function updateNumber(elem, stateIndex, preventDefault) {
  * @param preventDefault  whether to preventDefault on the event
  */
 function setState(elem, stateIndex, value, preventDefault) {
-  return changeState(elem, stateIndex, constant(value), preventDefault, ['constant', value]);
+    return changeState(elem, stateIndex, constant(value), preventDefault, [
+        'constant',
+        value,
+    ]);
 }
-
+exports.setState = setState;
 /**
  * Get a function that will delete a key from within the state
  * @param elem            React element; usually "this"
@@ -371,9 +331,10 @@ function setState(elem, stateIndex, value, preventDefault) {
  * @param preventDefault  whether to preventDefault on the event
  */
 function deleteState(elem, stateIndex, preventDefault) {
-  return changeState(elem, stateIndex[0], remove(stateIndex.slice(1)), preventDefault, ['remove', stateIndex]);
+    stateIndex = normalizeKeys(stateIndex);
+    return changeState(elem, stateIndex[0], remove(stateIndex.slice(1)), preventDefault, ['remove', stateIndex]);
 }
-
+exports.deleteState = deleteState;
 /**
  * Filters a changed state variable so that we only include
  * keys that were changed
@@ -382,16 +343,15 @@ function deleteState(elem, stateIndex, preventDefault) {
  * @return changeState, with only the keys that are different from origState
  */
 function getChanged(origState, changedState) {
-  var changes = {};
-  _lodash2.default.forEach(changedState, function (val, key) {
-    if (origState[key] !== changedState[key]) {
-      changes[key] = val;
-    }
-  });
-
-  return changes;
+    const changes = {};
+    lodash_1.default.forEach(changedState, (val, key) => {
+        if (origState[key] !== changedState[key]) {
+            changes[key] = val;
+        }
+    });
+    return changes;
 }
-
+exports.getChanged = getChanged;
 /**
  * The default message handler for request from the server
  * @param elem  element to get a "then" handler for
@@ -399,66 +359,61 @@ function getChanged(origState, changedState) {
  * @param loadingKey   key in elem.state to set the loading
  * @param dataKey      key in elem.state to set the data (from data.data)
  */
-function getThen(elem, responseKey, loadingKey, dataKey) {
-  // Avoid creating new functions if possible
-  var cacheKey = ['__cache', JSON.stringify(['getThen', responseKey, loadingKey])];
-
-  responseKey = responseKey || 'response';
-  loadingKey = loadingKey || 'loading';
-  dataKey = dataKey || 'data';
-
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func(data) {
-    var newState = {};
-    newState[loadingKey] = false;
-    newState[responseKey] = data;
-
-    if (data.success && dataKey && data.data) {
-      newState[dataKey] = data.data;
-    }
-
-    elem.setState(newState);
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
-}
-
-/**
- * The default message handler for request from the server
- * @param elem  element to get a "then" handler for
- * @param responseKey  key in elem.state to set the response (data)
- * @param loadingKey   key in elem.state to set the loading
- * @param dataKey      key in elem.state to set the data (from data.data)
- */
-function getCatch(elem, responseKey, loadingKey) {
-  // Avoid creating new functions if possible
-  var cacheKey = ['__cache', JSON.stringify(['getCatch', responseKey, loadingKey])];
-
-  responseKey = responseKey || 'response';
-  loadingKey = loadingKey || 'loading';
-
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func(err) {
-    console.error(err.stack);
-    var newState = {};
-    newState[loadingKey] = false;
-    newState[responseKey] = {
-      success: false,
-      messages: ['An unexpected error has occurred. Please try again later.'],
-      error: err
+function getThen(elem, responseKey = 'response', loadingKey = 'loading', dataKey = 'data') {
+    // Avoid creating new functions if possible
+    const cacheKey = [
+        '__cache',
+        JSON.stringify(['getThen', responseKey, loadingKey]),
+    ];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function (data) {
+        const newState = {};
+        newState[loadingKey] = false;
+        newState[responseKey] = data;
+        if (data.success && dataKey && data.data) {
+            newState[dataKey] = data.data;
+        }
+        elem.setState(newState);
     };
-    elem.setState(newState);
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.getThen = getThen;
+/**
+ * The default message handler for request from the server
+ * @param elem  element to get a "then" handler for
+ * @param responseKey  key in elem.state to set the response (data)
+ * @param loadingKey   key in elem.state to set the loading
+ * @param dataKey      key in elem.state to set the data (from data.data)
+ */
+function getCatch(elem, responseKey = 'response', loadingKey = 'loading') {
+    // Avoid creating new functions if possible
+    const cacheKey = [
+        '__cache',
+        JSON.stringify(['getCatch', responseKey, loadingKey]),
+    ];
+    responseKey = responseKey || 'response';
+    loadingKey = loadingKey || 'loading';
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function (err) {
+        console.error(err.stack);
+        const newState = {};
+        newState[loadingKey] = false;
+        newState[responseKey] = {
+            success: false,
+            messages: ['An unexpected error has occurred. Please try again later.'],
+            error: err,
+        };
+        elem.setState(newState);
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
+}
+exports.getCatch = getCatch;
 /**
  * Render an alert based on the output from a defaultThen
  * and defaultCatch
@@ -470,32 +425,22 @@ function getCatch(elem, responseKey, loadingKey) {
  * @return alert if success or fail
  */
 function renderResponse(response, options) {
-  options = options || {};
-  var type = options.type || 'alert'; // Can be substituted with 'text'
-  var additionalClasses = options.additionalClasses || '';
-  var onClick = options.onClick;
-  var errorsOnly = !!options.errorsOnly;
-
-  if (!response) return null;
-  if (response.success && errorsOnly) return null;
-
-  /* eslint-disable jsx-a11y/no-static-element-interactions */
-  return response && response.messages && _react2.default.createElement(
-    'div',
-    {
-      className: type + ' ' + type + '-' + (response.success ? 'success' : 'danger') + (additionalClasses ? ' ' + additionalClasses : '') + (onClick ? ' wa-link' : ''),
-      onClick: onClick
-    },
-    response.messages.map(function (message, i) {
-      return _react2.default.createElement(
-        'p',
-        { key: i },
-        message
-      );
-    })
-  );
+    options = options || {};
+    const type = options.type || 'alert'; // Can be substituted with 'text'
+    const additionalClasses = options.additionalClasses || '';
+    const onClick = options.onClick;
+    const errorsOnly = !!options.errorsOnly;
+    if (!response)
+        return null;
+    if (response.success && errorsOnly)
+        return null;
+    return (response &&
+        response.messages && (react_1.default.createElement("div", { className: `${type} ${type}-` +
+            (response.success ? 'success' : 'danger') +
+            (additionalClasses ? ' ' + additionalClasses : '') +
+            (onClick ? ' wa-link' : ''), onClick: onClick }, response.messages.map((message, i) => (react_1.default.createElement("p", { key: i }, message))))));
 }
-
+exports.renderResponse = renderResponse;
 /**
  * Get an event handler that does all of the entries
  * supplied
@@ -505,140 +450,133 @@ function renderResponse(response, options) {
  * @return event handler
  */
 function all(elem, handlers, preventDefault) {
-  var cacheKey = ['__cache', 'all'];
-  var allCached = _lodash2.default.get(elem, cacheKey) || [];
-
-  // Try to find one in the cache by deep comparisons
-  var cached = null;
-
-  for (var j = 0; j !== allCached.length; j++) {
-    var item = allCached[j];
-    var cachedHandlers = item.args[0];
-
-    var matched = cachedHandlers.length !== 0;
-    // Check if all the functions match
-    for (var i = 0; i !== cachedHandlers.length; i++) {
-      if (cachedHandlers[i] !== handlers[i]) {
-        matched = false;
-        break;
-      }
+    const cacheKey = ['__cache', 'all'];
+    const allCached = lodash_1.default.get(elem, cacheKey) || [];
+    // Try to find one in the cache by deep comparisons
+    let cached = null;
+    for (let j = 0; j !== allCached.length; j++) {
+        const item = allCached[j];
+        const cachedHandlers = item.args[0];
+        let matched = cachedHandlers.length !== 0;
+        // Check if all the functions match
+        for (let i = 0; i !== cachedHandlers.length; i++) {
+            if (cachedHandlers[i] !== handlers[i]) {
+                matched = false;
+                break;
+            }
+        }
+        if (item.args[1] !== preventDefault)
+            matched = false;
+        if (matched) {
+            cached = item;
+            break;
+        }
     }
-    if (item.args[1] !== preventDefault) matched = false;
-
-    if (matched) {
-      cached = item;
-      break;
-    }
-  }
-  if (cached) return cached.func;
-
-  var func = function func(e) {
-    if (preventDefault) preventDefaultAndBlur(e);
-    var origState = elem.state;
-
-    for (var _i = 0; _i !== handlers.length; _i++) {
-      // We may be calling multiple sequential setStates
-      // which all act on the initial (pre-setState) state
-      // so we'll fake it by saving the state each time
-      elem.state = handlers[_i](e);
-    }
-
-    elem.state = origState;
-    // We want setState to still work
-    // Restore the original state
-  };
-
-  cached = {
-    args: [handlers, preventDefault],
-    func: func
-  };
-  allCached.push(cached);
-  _lodash2.default.set(elem, cacheKey, allCached);
-
-  return func;
+    if (cached)
+        return cached.func;
+    const func = function (e) {
+        if (preventDefault)
+            preventDefaultAndBlur(e);
+        const origState = elem.state;
+        for (let i = 0; i !== handlers.length; i++) {
+            // We may be calling multiple sequential setStates
+            // which all act on the initial (pre-setState) state
+            // so we'll fake it by saving the state each time
+            elem.state = handlers[i](e);
+        }
+        elem.state = origState;
+        // We want setState to still work
+        // Restore the original state
+    };
+    cached = {
+        args: [handlers, preventDefault],
+        func: func,
+    };
+    allCached.push(cached);
+    lodash_1.default.set(elem, cacheKey, allCached);
+    return func;
 }
-
+exports.all = all;
 /**
  * getNewValue (updater) function that sets the value to that
  * received in the event
  */
 function fromEvent(curValue, e) {
-  return e && e.target ? e.target.value : e;
+    return getValueFromEventOrValue(e);
 }
-
+exports.fromEvent = fromEvent;
 /**
  * getNewValue (updater) function that sets the value to that
  * received in the event, cast to a number
  */
 function numberFromEvent(curValue, e) {
-  var value = parseFloat(e && e.target ? e.target.value : e);
-  return isNaN(value) ? null : value;
+    const value = parseFloat(getValueFromEventOrValue(e));
+    return isNaN(value) ? null : value;
 }
-
+exports.numberFromEvent = numberFromEvent;
 /**
  * Generator of a getNewValue (updater) function that
  * sets the value to a constant specified ahead of time
  */
 function constant(value) {
-  return function () {
-    return value;
-  };
+    return function () {
+        return value;
+    };
 }
-
+exports.constant = constant;
 /**
  * Generator of a getNewValue (updater) function that
  * deletes a key from within an object
  */
 function remove(indexToDelete) {
-  return function (curValue) {
-    return deleteMixed(curValue, indexToDelete);
-  };
+    return function (curValue) {
+        return exports.deleteMixed(curValue, indexToDelete);
+    };
 }
-
+exports.remove = remove;
 /**
  * Generator of a getNewValue (updater) function that
  * adds or splices an element from an array based on
  * whether it's in the array already
  */
 function toggleMembership(value) {
-  return function (curValue) {
-    var index = curValue.indexOf(value);
-    if (index === -1) {
-      return curValue.concat([value]);
-    } else {
-      return curValue.filter(function (val) {
-        return val !== value;
-      });
-    }
-  };
+    return function (curValue) {
+        const index = curValue.indexOf(value);
+        if (index === -1) {
+            return curValue.concat([value]);
+        }
+        else {
+            return curValue.filter(val => val !== value);
+        }
+    };
 }
-
+exports.toggleMembership = toggleMembership;
 /**
  * getNewValue (updater) function that negates the value
  */
 function negate(curValue) {
-  return !curValue;
+    return !curValue;
 }
-
+exports.negate = negate;
 /**
  * getNewValue (updater) function that sets the value to that of the constant,
  * or if it's already the same, nulls it
  */
 function toggleConstant(value) {
-  return function (curValue) {
-    return curValue === value ? null : value;
-  };
+    return function (curValue) {
+        return curValue === value ? null : value;
+    };
 }
-
+exports.toggleConstant = toggleConstant;
 /**
  * getNewValue (updater) function that sets the value to that from an event,
  * or if it's already the same, nulls it
  */
 function setOrNull(curValue, e) {
-  var value = e && e.target ? e.target.value : e;
-  return curValue === value ? null : value;
+    const value = getValueFromEventOrValue(e);
+    return curValue === value ? null : value;
 }
-
+exports.setOrNull = setOrNull;
 /**
  * Get an event handler that will set the value of a prop
  * based on the "getNewValue" function supplied
@@ -652,35 +590,45 @@ function setOrNull(curValue, e) {
  * @return function to handle events or values being changed
  */
 function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, preventDefault, extraCacheKey) {
-  var cacheKey = ['__cache', JSON.stringify(['changeProp', propFunc, propIndex, indexInProp, preventDefault, extraCacheKey])];
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func(e) {
-    if (preventDefault) preventDefaultAndBlur(e);
-
-    var newPropObj = null;
-    if (propIndex != null) {
-      var curPropObj = getMixed(elem.props, propIndex);
-      if (indexInProp != null) {
-        var curValue = getMixed(curPropObj, indexInProp);
-        var newValue = getNewValue(curValue, e);
-        newPropObj = setMixed(curPropObj, indexInProp, newValue);
-      } else {
-        newPropObj = getNewValue(curPropObj, e);
-      }
-    } else {
-      newPropObj = getNewValue(null, e);
-    }
-
-    elem.props[propFunc](newPropObj);
-    return newPropObj;
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    const cacheKey = [
+        '__cache',
+        JSON.stringify([
+            'changeProp',
+            propFunc,
+            propIndex,
+            indexInProp,
+            preventDefault,
+            extraCacheKey,
+        ]),
+    ];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function (e) {
+        if (preventDefault)
+            preventDefaultAndBlur(e);
+        let newPropObj = null;
+        if (propIndex != null) {
+            const curPropObj = exports.getMixed(elem.props, propIndex);
+            if (indexInProp != null) {
+                const curValue = exports.getMixed(curPropObj, indexInProp);
+                const newValue = getNewValue(curValue, e);
+                newPropObj = exports.setMixed(curPropObj, indexInProp, newValue);
+            }
+            else {
+                newPropObj = getNewValue(curPropObj, e);
+            }
+        }
+        else {
+            newPropObj = getNewValue(null, e);
+        }
+        elem.props[propFunc](newPropObj);
+        return newPropObj;
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.changeProp = changeProp;
 /**
  * Get an event handler that will set the value of a state
  * based on the "getNewValue" function supplied
@@ -692,25 +640,26 @@ function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, prevent
  * @return function to handle events or values being changed
  */
 function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKey) {
-  var cacheKey = ['__cache', JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey])];
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func(e) {
-    if (preventDefault) preventDefaultAndBlur(e);
-
-    var curValue = getMixed(elem.state, stateIndex);
-    var newValue = getNewValue(curValue, e);
-    var newState = setMixed(elem.state, stateIndex, newValue);
-
-    elem.setState(getChanged(elem.state, newState));
-    return newState;
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    const cacheKey = [
+        '__cache',
+        JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey]),
+    ];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function (e) {
+        if (preventDefault)
+            preventDefaultAndBlur(e);
+        const curValue = exports.getMixed(elem.state, stateIndex);
+        const newValue = getNewValue(curValue, e);
+        const newState = exports.setMixed(elem.state, stateIndex, newValue);
+        elem.setState(getChanged(elem.state, newState));
+        return newState;
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.changeState = changeState;
 /**
  * Get an event handler that will call a function on the React
  * component
@@ -722,28 +671,36 @@ function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKe
  * @return handler that calls a component function
  */
 function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
-  var cacheKey = ['__cache', JSON.stringify(['call', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func() {
-    var args = Array.prototype.slice.call(arguments);
-
-    if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
-    var callArgs = [].concat(prefixArgs).concat(args);
-
-    var func = _lodash2.default.get(elem, funcName);
-    if (func) {
-      return func.apply(elem, callArgs);
-    } else {
-      return null;
-    }
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    const cacheKey = [
+        '__cache',
+        JSON.stringify([
+            'call',
+            funcName,
+            prefixArgs,
+            preventDefault,
+            extraCacheKey,
+        ]),
+    ];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function () {
+        const args = Array.prototype.slice.call(arguments);
+        if (preventDefault && args[0])
+            preventDefaultAndBlur(args[0]);
+        const callArgs = (prefixArgs || []).concat(args);
+        const func = lodash_1.default.get(elem, funcName);
+        if (func) {
+            return func.apply(elem, callArgs);
+        }
+        else {
+            return null;
+        }
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.call = call;
 /**
  * Get an event handler that will call a function on the React
  * component's props with given arguments
@@ -755,28 +712,36 @@ function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
  * @return handler that calls a component function
  */
 function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
-  var cacheKey = ['__cache', JSON.stringify(['callProp', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func() {
-    var args = Array.prototype.slice.call(arguments);
-
-    if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
-    var callArgs = [].concat(prefixArgs || []).concat(args);
-
-    var func = _lodash2.default.get(elem.props, funcName);
-    if (func) {
-      return func.apply(elem, callArgs);
-    } else {
-      return null;
-    }
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    const cacheKey = [
+        '__cache',
+        JSON.stringify([
+            'callProp',
+            funcName,
+            prefixArgs,
+            preventDefault,
+            extraCacheKey,
+        ]),
+    ];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function () {
+        const args = Array.prototype.slice.call(arguments);
+        if (preventDefault && args[0])
+            preventDefaultAndBlur(args[0]);
+        const callArgs = (prefixArgs || []).concat(args);
+        const func = lodash_1.default.get(elem.props, funcName);
+        if (func) {
+            return func.apply(elem, callArgs);
+        }
+        else {
+            return null;
+        }
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.callProp = callProp;
 /**
  * Get a function to be used with ref={} to register a ref into
  * a variable in the current object
@@ -785,65 +750,60 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
  * @return {function} handler for ref=}}
  */
 function registerRef(elem, variableName) {
-  var cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  var cached = _lodash2.default.get(elem, cacheKey);
-  if (cached) return cached;
-
-  var func = function func(pageElem) {
-    _lodash2.default.setWith(elem, variableName, pageElem, Object);
-  };
-
-  _lodash2.default.setWith(elem, cacheKey, func, Object);
-  return func;
+    const cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
+    const cached = lodash_1.default.get(elem, cacheKey);
+    if (cached)
+        return cached;
+    const func = function (pageElem) {
+        lodash_1.default.setWith(elem, variableName, pageElem, Object);
+    };
+    lodash_1.default.setWith(elem, cacheKey, func, Object);
+    return func;
 }
-
+exports.registerRef = registerRef;
 exports.default = {
-  preventDefault: preventDefault,
-  stopPropagation: stopPropagation,
-  toggle: toggle,
-  toggleValue: toggleValue,
-  toggleFromEvent: toggleFromEvent,
-  toggleArrayMember: toggleArrayMember,
-  toggleProp: toggleProp,
-  togglePropValue: togglePropValue,
-  togglePropFromEvent: togglePropFromEvent,
-  togglePropArrayMember: togglePropArrayMember,
-  setProp: setProp,
-  setPropNumber: setPropNumber,
-  setPropValue: setPropValue,
-  deleteProp: deleteProp,
-  callProp: callProp,
-  call: call,
-  update: update,
-  updateNumber: updateNumber,
-  setState: setState,
-  deleteState: deleteState,
-  registerRef: registerRef,
-
-  // AJAX response handlers
-  getThen: getThen,
-  getCatch: getCatch,
-  renderResponse: renderResponse,
-
-  // Updaters
-  fromEvent: fromEvent,
-  numberFromEvent: numberFromEvent,
-  constant: constant,
-  negate: negate,
-  toggleConstant: toggleConstant,
-
-  // Compositors
-  all: all,
-  changeState: changeState,
-  changeProp: changeProp,
-
-  // Utility functions
-  // Legacy names
-  setMixed: setMixed,
-  getMixed: getMixed,
-  deleteMixed: deleteMixed,
-
-  set: set,
-  get: get,
-  deleteDeep: deleteDeep
+    preventDefault: preventDefault,
+    stopPropagation: stopPropagation,
+    toggle: toggle,
+    toggleValue: toggleValue,
+    toggleFromEvent: toggleFromEvent,
+    toggleArrayMember: toggleArrayMember,
+    toggleProp: toggleProp,
+    togglePropValue: togglePropValue,
+    togglePropFromEvent: togglePropFromEvent,
+    togglePropArrayMember: togglePropArrayMember,
+    setProp: setProp,
+    setPropNumber: setPropNumber,
+    setPropValue: setPropValue,
+    deleteProp: deleteProp,
+    callProp: callProp,
+    call: call,
+    update: update,
+    updateNumber: updateNumber,
+    setState: setState,
+    deleteState: deleteState,
+    registerRef: registerRef,
+    // AJAX response handlers
+    getThen: getThen,
+    getCatch: getCatch,
+    renderResponse: renderResponse,
+    // Updaters
+    fromEvent: fromEvent,
+    numberFromEvent: numberFromEvent,
+    constant: constant,
+    negate: negate,
+    toggleConstant: toggleConstant,
+    // Compositors
+    all: all,
+    changeState: changeState,
+    changeProp: changeProp,
+    // Utility functions
+    // Legacy names
+    setMixed: exports.setMixed,
+    getMixed: exports.getMixed,
+    deleteMixed: exports.deleteMixed,
+    set: set,
+    get: get,
+    deleteDeep: deleteDeep,
 };
+//# sourceMappingURL=index.js.map
