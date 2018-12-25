@@ -117,7 +117,7 @@ export declare function toggleArrayMember(elem: React.Component<any>, stateIndex
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export declare function togglePropArrayMember(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys, value: any, preventDefault?: boolean): any;
+export declare function togglePropArrayMember(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, value: any, preventDefault?: boolean): any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information given
@@ -129,7 +129,7 @@ export declare function togglePropArrayMember(elem: React.Component<any>, propFu
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setProp(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys, preventDefault?: boolean): any;
+export declare function setProp(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, preventDefault?: boolean): any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information from an event
@@ -142,7 +142,7 @@ export declare function setProp(elem: React.Component<any>, propFunc: string, pr
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setPropNumber(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys, preventDefault?: boolean): any;
+export declare function setPropNumber(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, preventDefault?: boolean): any;
 /**
  * Get an event handler that will set the value of a prop
  * to a set value
@@ -155,7 +155,7 @@ export declare function setPropNumber(elem: React.Component<any>, propFunc: stri
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setPropValue(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys, value: any, preventDefault?: boolean): any;
+export declare function setPropValue(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, value: any, preventDefault?: boolean): any;
 /**
  * Get an event handler that will delete a certain key from a prop
  * and then call an onChange handler; works for both arrays and

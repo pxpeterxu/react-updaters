@@ -310,7 +310,7 @@ export function togglePropArrayMember(
   elem: React.Component<any>,
   propFunc: string,
   propIndex: Keys,
-  indexInProp: Keys,
+  indexInProp: Keys | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -340,7 +340,7 @@ export function setProp(
   elem: React.Component<any>,
   propFunc: string,
   propIndex: Keys,
-  indexInProp: Keys,
+  indexInProp: Keys | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -370,7 +370,7 @@ export function setPropNumber(
   elem: React.Component<any>,
   propFunc: string,
   propIndex: Keys,
-  indexInProp: Keys,
+  indexInProp: Keys | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -400,7 +400,7 @@ export function setPropValue(
   elem: React.Component<any>,
   propFunc: string,
   propIndex: Keys,
-  indexInProp: Keys,
+  indexInProp: Keys | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
