@@ -11,8 +11,8 @@ changes to your object models/properties?
 
 With `react-updaters`, don't repeat yourself with event handlers! It helps:
 
-* Automatically link event handlers up with state or props, and
-* Preserves immutable semantics by repeatedly returning the same functions (when called with the same arguments) and making deep copies so that PureRender/PureComponents work as expected.
+- Automatically link event handlers up with state or props, and
+- Preserves immutable semantics by repeatedly returning the same functions (when called with the same arguments) and making deep copies so that PureRender/PureComponents work as expected.
 
 ### Typical Javascript
 
@@ -79,73 +79,83 @@ class MyComponent extends React.PureComponent {
 
 `react-updaters` includes handlers to update state/props and call functions:
 
-* Update state:
-  * [`update(elem, stateIndex[, preventDefault])`](#update): updates an index within state
+- Update state:
+
+  - [`update(elem, stateIndex[, preventDefault])`](#update): updates an index within state
     with the data passed in the event/call to the handler function.
-  * [`updateNumber(elem, stateIndex[, preventDefault)`](#updateNumber): same as `update`, except
+  - [`updateNumber(elem, stateIndex[, preventDefault)`](#updateNumber): same as `update`, except
     casts the value into a number using `parseFloat`.
-  * [`setState(elem, stateIndex, value[, preventDefault]`](#setState): set a certain key in
+  - [`setState(elem, stateIndex, value[, preventDefault]`](#setState): set a certain key in
     the component's state to a constant `value`.
-  * [`deleteState(elem, stateIndex, value[, preventDefault]`](#deleteState): deletes a certain
+  - [`deleteState(elem, stateIndex, value[, preventDefault]`](#deleteState): deletes a certain
     key in the component's state. For arrays, it splices out that key.
-  * [`toggle(elem, stateIndex[, preventDefault]`](#toggle): toggles a certain key within
+  - [`toggle(elem, stateIndex[, preventDefault]`](#toggle): toggles a certain key within
     state between `true` and `false`.
-  * [`toggleValue(elem, stateIndex, value[, preventDefault]`](#toggleValue): toggles a certain
+  - [`toggleValue(elem, stateIndex, value[, preventDefault]`](#toggleValue): toggles a certain
     key in state between `null` and the `value` provided. If the key is another
     value, it sets it to `value`. This is useful for tabs or a group of
     expandable panels (accordion panels).
-  * [`toggleFromEvent(elem, stateIndex[, preventDefault]`](#toggleFromEvent): toggles a certain key
+  - [`toggleFromEvent(elem, stateIndex[, preventDefault]`](#toggleFromEvent): toggles a certain key
     in state between `null` and the value in the event/call to the handler.
-  * [`toggleArrayMember(elem, stateIndex, value[, preventDefault]`](#toggleArrayMember):
+  - [`toggleArrayMember(elem, stateIndex, value[, preventDefault]`](#toggleArrayMember):
     toggles whether a certain value is in an array in `props`. This is useful
     for arrays where you want to add/remove members based on clicks.
+  - [`toggleArrayMemberFromEvent(elem, stateIndex[, preventDefault]`](#toggleArrayMemberFromEvent):
+    toggles whether a certain value, passed in by the caller, is in an array in `props`. This is
+    useful for arrays where you want to add/remove members based on child clicks.
 
-* Update props for controlled components (through an `onChange` handler within the props). These
+- Update props for controlled components (through an `onChange` handler within the props). These
   are analogous to the ones for `state` above:
-  * [`setProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#setProp): update
+
+  - [`setProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#setProp): update
     a controlled prop through the `propFunc` onChange handler with the data
     passed in the event/call to the handler.
-  * [`setPropNumber(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#setPropNumber):
+  - [`setPropNumber(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#setPropNumber):
     same as `setProp`, except casts the value into a number using `parseFloat`.
-  * [`setPropValue(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#setPropValue):
+  - [`setPropValue(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#setPropValue):
     set a controlled prop through the `propFunc` onChange handler to a constant
     `value`.
-  * [`deleteProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#deleteProp):
+  - [`deleteProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#deleteProp):
     deletes a certain key in the component's props, and then passes the resulting
     object through the `propFunc` onChange handler. For arrays, it splices out
     that key.
-  * [`toggleProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#toggleProp):
+  - [`toggleProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#toggleProp):
     toggles a certain key within props between `true` and `false`, and updates it
     using `propFunc`.
-  * [`togglePropValue(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#togglePropValue):
+  - [`togglePropValue(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#togglePropValue):
     toggles a certain key in props between `null` and the `value` provided and
     passes it to the `propFunc` onChange handler. If the key is currently a different value,
     it sets it to `value`.
-  * [`togglePropFromEvent(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#togglePropFromEvent):
+  - [`togglePropFromEvent(elem, propFunc, propIndex, indexInProp[, preventDefault])`](#togglePropFromEvent):
     toggles a certain key in props between `null` and the value in the event/call
     to the handler.
-  * [`togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#toggleArrayMember):
+  - [`togglePropArrayMember(elem, propFunc, propIndex, indexInProp, value[, preventDefault])`](#toggleArrayMember):
     toggles whether a certain value is in an array in `props`. This is useful
     for arrays where you want to add/remove members based on clicks.
+  - [`togglePropArrayMemberFromEvent(elem, propFunc, propIndex, indexInProp[, preventDefault]`](#togglePropArrayMemberFromEvent):
+    toggles whether a certain value, passed in by the caller, is in an array in `props`. This is
+    useful for arrays where you want to add/remove members based on child clicks.
 
-* Calls functions on either the current component or a prop:
-  * [`call(elem, funcName, prefixArgs[, preventDefault, extraCacheKey])`](#call): calls
+- Calls functions on either the current component or a prop:
+
+  - [`call(elem, funcName, prefixArgs[, preventDefault, extraCacheKey])`](#call): calls
     a function on the component. This is very similar to `bind`ing an event
     handler, but has a cache backing it (i.e. multiple calls to `call` with the
     same arguments will always return one function).
-  * [`callProp(elem, funcName, prefixArgs[, preventDefault, extraCacheKey])`](#callProp):
+  - [`callProp(elem, funcName, prefixArgs[, preventDefault, extraCacheKey])`](#callProp):
     same as `call`, except instead of calling a function on the current
     component, it calls a function within the component's props.
 
-* Miscellaneous functions:
-  * [`registerRef(elem, variableName)`](#registerRef): useful for refs: use
+- Miscellaneous functions:
+
+  - [`registerRef(elem, variableName)`](#registerRef): useful for refs: use
     `<ChildComponent ref={registerRef(this, '_blah')} />`,
     and `this._blah` will become the reference to the child component.
-  * [`preventDefault` and `stopPropagation`](#preventDefault): two event handlers that do nothing
+  - [`preventDefault` and `stopPropagation`](#preventDefault): two event handlers that do nothing
     but prevent the default action/stops event bubbling respectively.
 
-* Compositors:
-  * [`all(this, [handler1, handler2])`](#all): allows one to combine multiple event
+- Compositors:
+  - [`all(this, [handler1, handler2])`](#all): allows one to combine multiple event
     handlers (from `react-updaters` or from elsewhere) into a single event
     handler, while preserving PureRender semantics (i.e., if you pass the same
     `handler1` and `handler2` multiple times, you get one identical function
@@ -156,6 +166,7 @@ class MyComponent extends React.PureComponent {
 ### State updaters
 
 #### <a id="update"></a> `update(elem, stateIndex[, preventDefault])`
+
 #### <a id="updateNumber"></a> `updateNumber(elem, stateIndex[, preventDefault])`
 
 **Description**: updates an index within state. The handler automatically figures out if it's getting an `Event` (for which it needs to get `event.target.value`) or just an object itself, and uses the value from there to set the state.
@@ -186,6 +197,7 @@ import { update } from 'react-updaters';
 **Description**: set a certain key in the component's state to a constant `value`.
 
 **Example**
+
 ```js
 import { setState } from 'react-updaters';
 
@@ -269,6 +281,7 @@ render() {
     )}
   </div>);
 ```
+
 #### <a id="toggleFromEvent"></a> `toggleFromEvent(elem, stateIndex[, preventDefault])`
 
 **Description**: toggles a certain key in state between `null` and the value in the event/call to the handler. Useful for accordions.
@@ -317,17 +330,26 @@ class ToppingsSelect extends React.Component {
   render() {
     const { toppings } = this.state;
 
-    return (<div>
-      {['anchovies', 'canadian bacon', 'mushrooms', 'peppers', 'pineapples'].map(option => (<div>
-        <input
-          type="checkbox"
-          checked={toppings.indexOf(option) !== -1}
-          onChange={toggleArrayMember(this, 'toppings', option)}
-        />
-        {' '}
-        {option}
-      </div>))}
-    </div>);
+    return (
+      <div>
+        {[
+          'anchovies',
+          'canadian bacon',
+          'mushrooms',
+          'peppers',
+          'pineapples',
+        ].map(option => (
+          <div>
+            <input
+              type="checkbox"
+              checked={toppings.indexOf(option) !== -1}
+              onChange={toggleArrayMember(this, 'toppings', option)}
+            />{' '}
+            {option}
+          </div>
+        ))}
+      </div>
+    );
   }
 }
 ```
@@ -336,14 +358,14 @@ class ToppingsSelect extends React.Component {
 
 In general, props updaters have the same few arguments:
 
-* `propFunc`: the name of the onChange handler within props (e.g., `'onLlamaChange'` for the prop `this.props.onLlamaChange`)
-* `propIndex`: the index of the object that should get passed to the `propFunc` onChange handler after we modify it. (e.g., `llama` for `this.props.llama`)
-* `indexInProp` (optional): if the value we're changing is not the whole prop at `propIndex` but only a part/child of it, this specifies the index within that value we should change. (e.g., `color` with the above example would refer to `this.props.llama.color`).
+- `propFunc`: the name of the onChange handler within props (e.g., `'onLlamaChange'` for the prop `this.props.onLlamaChange`)
+- `propIndex`: the index of the object that should get passed to the `propFunc` onChange handler after we modify it. (e.g., `llama` for `this.props.llama`)
+- `indexInProp` (optional): if the value we're changing is not the whole prop at `propIndex` but only a part/child of it, this specifies the index within that value we should change. (e.g., `color` with the above example would refer to `this.props.llama.color`).
 
 Putting it all together, the event handler generally is equivalent to:
 
 ```js
-handleEvent = (e) => {
+handleEvent = e => {
   const obj = this.props[propIndex];
 
   const newValue = doSomething(e);
@@ -352,10 +374,11 @@ handleEvent = (e) => {
   _.set(obj, indexInProp, newValue);
 
   this.props[propFunc](obj);
-}
+};
 ```
 
 #### <a id="setProp"></a> `setProp(elem, propFunc, propIndex, indexInProp[, preventDefault])`
+
 #### <a id="setPropNumber"></a> `setPropNumber(elem, propFunc, propIndex, indexInProp[, preventDefault])`
 
 **Description**: update a controlled prop through the `propFunc` onChange handler with the data passed in the event/call to the handler.
@@ -384,6 +407,7 @@ import { setProp } from 'react-updaters';
 **Description**: set a controlled prop through the `propFunc` onChange handler to a constant `value`.
 
 **Example**
+
 ```js
 import { setPropValue } from 'react-updaters';
 
@@ -469,6 +493,7 @@ render() {
     )}
   </div>);
 ```
+
 #### <a id="togglePropFromEvent"></a> `togglePropFromEvent(elem, propFunc, propIndex, indexInProp[, preventDefault])`
 
 **Description**: toggles a certain key in props between `null` and the value in the event/call to the handler. Useful for accordions.
@@ -523,17 +548,32 @@ class ToppingsSelect extends React.Component {
   render() {
     const toppings = this.props.pizza.toppings;
 
-    return (<div>
-      {['anchovies', 'canadian bacon', 'mushrooms', 'peppers', 'pineapples'].map(option => (<div>
-        <input
-          type="checkbox"
-          checked={toppings.indexOf(option) !== -1}
-          onChange={togglePropArrayMember(this, 'onChange', 'pizza', 'toppings', option)}
-        />
-        {' '}
-        {option}
-      </div>))}
-    </div>);
+    return (
+      <div>
+        {[
+          'anchovies',
+          'canadian bacon',
+          'mushrooms',
+          'peppers',
+          'pineapples',
+        ].map(option => (
+          <div>
+            <input
+              type="checkbox"
+              checked={toppings.indexOf(option) !== -1}
+              onChange={togglePropArrayMember(
+                this,
+                'onChange',
+                'pizza',
+                'toppings',
+                option,
+              )}
+            />{' '}
+            {option}
+          </div>
+        ))}
+      </div>
+    );
   }
 }
 ```
@@ -556,27 +596,22 @@ class FriedChickenOrderer extends React.PureComponent {
     // The `prefixArgs` are prepended to whatever the event
     // call arguments were
     event.preventDefault();
-    $.ajax(`/order/${amount}`) // ...
-  }
+    $.ajax(`/order/${amount}`); // ...
+  };
 
   render() {
-    return (<p>
-      How many fried chicken pieces would you like?
-
-      {/* Equivalent to `this.orderFriedChicken.bind(this, 1) */}
-      <button onClick={call(this, 'orderFriedChicken', [1])}>
-        One
-      </button>
-      <button onClick={call(this, 'orderFriedChicken', [2])}>
-        Two
-      </button>
-      <button onClick={call(this, 'orderFriedChicken', [5])}>
-        Five
-      </button>
-      <button onClick={call(this, 'orderFriedChicken', [100])}>
-        All of them
-      </button>
-    </p>);
+    return (
+      <p>
+        How many fried chicken pieces would you like?
+        {/* Equivalent to `this.orderFriedChicken.bind(this, 1) */}
+        <button onClick={call(this, 'orderFriedChicken', [1])}>One</button>
+        <button onClick={call(this, 'orderFriedChicken', [2])}>Two</button>
+        <button onClick={call(this, 'orderFriedChicken', [5])}>Five</button>
+        <button onClick={call(this, 'orderFriedChicken', [100])}>
+          All of them
+        </button>
+      </p>
+    );
   }
 }
 ```
@@ -598,23 +633,18 @@ class ControlledFriedChickenOrderer extends React.PureComponent {
   };
 
   render() {
-    return (<p>
-      How many fried chicken pieces would you like?
-
-      {/* Equivalent to `this.props.orderFriedChicken.bind(this, 1) */}
-      <button onClick={callProp(this, 'orderFriedChicken', [1])}>
-        One
-      </button>
-      <button onClick={callProp(this, 'orderFriedChicken', [2])}>
-        Two
-      </button>
-      <button onClick={callProp(this, 'orderFriedChicken', [5])}>
-        Five
-      </button>
-      <button onClick={callProp(this, 'orderFriedChicken', [100])}>
-        All of them
-      </button>
-    </p>);
+    return (
+      <p>
+        How many fried chicken pieces would you like?
+        {/* Equivalent to `this.props.orderFriedChicken.bind(this, 1) */}
+        <button onClick={callProp(this, 'orderFriedChicken', [1])}>One</button>
+        <button onClick={callProp(this, 'orderFriedChicken', [2])}>Two</button>
+        <button onClick={callProp(this, 'orderFriedChicken', [5])}>Five</button>
+        <button onClick={callProp(this, 'orderFriedChicken', [100])}>
+          All of them
+        </button>
+      </p>
+    );
   }
 }
 ```
@@ -645,8 +675,10 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { preventDefault } from 'react-updaters';
 
 <OverlayTrigger overlay={<Tooltip>This is a tooltip!</Tooltip>}>
-  <a href="#" onClick={preventDefault}>Hover to show tooltip</a>
-</OverlayTrigger>
+  <a href="#" onClick={preventDefault}>
+    Hover to show tooltip
+  </a>
+</OverlayTrigger>;
 ```
 
 ### Compositors

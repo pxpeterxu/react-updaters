@@ -1,5 +1,8 @@
 import React from 'react';
-import _ from 'lodash';
+import _setWith from 'lodash/setWith';
+import _get from 'lodash/get';
+import _set from 'lodash/set';
+import _clone from 'lodash/clone';
 
 /* eslint-disable prefer-rest-params */
 
@@ -45,7 +48,7 @@ function normalizeKeys(keys: Keys): (string | number)[] {
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
- * @param withType    if specified, used with _.setWith; currently disabled
+ * @param withType    if specified, used with _setWith; currently disabled
  * @return modified root obj
  */
 export function set(
@@ -55,7 +58,7 @@ export function set(
   withType?: any | null,
 ) {
   keys = normalizeKeys(keys);
-  const curValue = keys && keys.length !== 0 ? _.get(obj, keys) : obj;
+  const curValue = keys && keys.length !== 0 ? _get(obj, keys) : obj;
   if (curValue === value) {
     // Prevent unneeded changes
     return obj;
@@ -65,17 +68,17 @@ export function set(
 
   // Clone parents so that we still have good behavior
   // with PureRenderMixin
-  obj = _.clone(obj);
+  obj = _clone(obj);
   for (let i = 0; i !== keys.length - 1; i++) {
     const key = keys[i];
     keysSoFar.push(key);
-    _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
+    _set(obj, keysSoFar, _clone(_get(obj, keysSoFar)));
   }
 
   if (!withType) {
-    _.set(obj, keys, value);
+    _set(obj, keys, value);
   } else {
-    _.setWith(obj, keys, value, withType);
+    _setWith(obj, keys, value, withType);
   }
 
   return obj;
@@ -89,7 +92,7 @@ export function set(
  * @return value or undefined
  */
 export function get(obj: Object | any[], keys: Keys) {
-  return _.get(obj, keys);
+  return _get(obj, keys);
 }
 
 /**
@@ -105,16 +108,16 @@ export function deleteDeep(obj: Object | any[], keys: Keys) {
 
   // Clone parents so that we still have good behavior
   // with PureRenderMixin
-  obj = _.clone(obj);
+  obj = _clone(obj);
   for (let i = 0; i !== keys.length - 1; i++) {
     const key = keys[i];
     keysSoFar.push(key);
-    _.set(obj, keysSoFar, _.clone(_.get(obj, keysSoFar)));
+    _set(obj, keysSoFar, _clone(_get(obj, keysSoFar)));
   }
 
   // Use the second-to-last key to get the object to delete in
   const deleteObjKey = keys.slice(0, -1);
-  const deleteObj = deleteObjKey.length !== 0 ? _.get(obj, deleteObjKey) : obj;
+  const deleteObj = deleteObjKey.length !== 0 ? _get(obj, deleteObjKey) : obj;
   const deleteKey = keys[keys.length - 1];
 
   if (deleteObj instanceof Array) {
@@ -277,6 +280,28 @@ export function togglePropFromEvent(
 
 /**
  * Get an event handler that will toggle whether a value is present
+ * in an array at the given state key (by adding or removing it);
+ * the value is passed from the calling event
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+export function toggleArrayMemberFromEvent(
+  elem: React.Component<any>,
+  stateIndex: Keys,
+  preventDefault?: boolean,
+) {
+  return changeState(
+    elem,
+    stateIndex,
+    toggleMembershipFromEvent,
+    preventDefault,
+    'toggleMembershipFromEvent',
+  );
+}
+
+/**
+ * Get an event handler that will toggle whether a value is present
  * in an array at the given state key (by adding or removing it)
  * @param elem            React element; usually "this"
  * @param stateIndex      path (array or string) of array in state to toggle
@@ -294,7 +319,7 @@ export function toggleArrayMember(
     stateIndex,
     toggleMembership(value),
     preventDefault,
-    ['toggleMembership', value],
+    ['toggleMembership'],
   );
 }
 
@@ -302,7 +327,11 @@ export function toggleArrayMember(
  * Get an event handler that will toggle whether a value is present
  * in an array at the given prop key (by adding or removing it)
  * @param elem            React element; usually "this"
- * @param stateIndex      path (array or string) of array in state to toggle
+ * @param propFunc        function to call to update the prop
+ *                        (e.g., 'onPropChanged')
+ * @param propIndex       index of the object to change in props
+ * @param indexInProp     index within the prop of the array to change (or null
+ *                        if propIndex already points to the array)
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
@@ -322,6 +351,36 @@ export function togglePropArrayMember(
     toggleMembership(value),
     preventDefault,
     ['toggleMembership', value],
+  );
+}
+
+/**
+ * Get an event handler that will toggle whether a value (passed in
+ * as an argument) should be in an array at the given prop key
+ * (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param propFunc        function to call to update the prop
+ *                        (e.g., 'onPropChanged')
+ * @param propIndex       index of the object to change in props
+ * @param indexInProp     index within the prop of the array to change (or null
+ *                        if propIndex already points to the array)
+ * @param preventDefault  whether to preventDefault
+ */
+export function togglePropArrayMemberFromEvent(
+  elem: React.Component<any>,
+  propFunc: string,
+  propIndex: Keys,
+  indexInProp: Keys | null | undefined,
+  preventDefault?: boolean,
+) {
+  return changeProp(
+    elem,
+    propFunc,
+    propIndex,
+    indexInProp,
+    toggleMembershipFromEvent,
+    preventDefault,
+    'toggleMembershipFromEvent',
   );
 }
 
@@ -534,11 +593,11 @@ export function getChanged(
   changedState: { [k: string]: any },
 ) {
   const changes = {};
-  _.forEach(changedState, (val, key) => {
+  for (const key of Object.keys(changedState)) {
     if (origState[key] !== changedState[key]) {
-      changes[key] = val;
+      changes[key] = changedState[key];
     }
-  });
+  }
 
   return changes;
 }
@@ -568,7 +627,7 @@ export function getThen(
     JSON.stringify(['getThen', responseKey, loadingKey]),
   ];
 
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(data: Response) {
@@ -583,7 +642,7 @@ export function getThen(
     elem.setState(newState);
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -608,7 +667,7 @@ export function getCatch(
   responseKey = responseKey || 'response';
   loadingKey = loadingKey || 'loading';
 
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(err: Error) {
@@ -623,7 +682,7 @@ export function getCatch(
     elem.setState(newState);
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -689,7 +748,7 @@ export function all(
   preventDefault?: boolean,
 ) {
   const cacheKey = ['__cache', 'all'];
-  const allCached = _.get(elem, cacheKey) || [];
+  const allCached = _get(elem, cacheKey) || [];
 
   // Try to find one in the cache by deep comparisons
   let cached = null;
@@ -736,7 +795,7 @@ export function all(
     func,
   };
   allCached.push(cached);
-  _.set(elem, cacheKey, allCached);
+  _set(elem, cacheKey, allCached);
 
   return func;
 }
@@ -792,6 +851,24 @@ export function toggleMembership(value: unknown) {
       return curValue.filter(val => val !== value);
     }
   };
+}
+
+/**
+ * Generator of a getNewValue (updater) function that
+ * adds or splices a value (from an event or caller)
+ * from an array based on whether it's in the array
+ */
+export function toggleMembershipFromEvent(
+  curValue: unknown[],
+  event: EventOrValue,
+) {
+  const value = getValueFromEventOrValue(event);
+  const index = curValue.indexOf(value);
+  if (index === -1) {
+    return curValue.concat([value]);
+  } else {
+    return curValue.filter(val => val !== value);
+  }
 }
 
 /**
@@ -852,7 +929,7 @@ export function changeProp(
       extraCacheKey,
     ]),
   ];
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(e: Event) {
@@ -876,7 +953,7 @@ export function changeProp(
     return newPropObj;
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -901,7 +978,7 @@ export function changeState(
     '__cache',
     JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey]),
   ];
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(e: Event) {
@@ -915,7 +992,7 @@ export function changeState(
     return newState;
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -946,7 +1023,7 @@ export function call(
       extraCacheKey,
     ]),
   ];
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function() {
@@ -955,7 +1032,7 @@ export function call(
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
-    const func = _.get(elem, funcName);
+    const func = _get(elem, funcName);
     if (func) {
       return func.apply(elem, callArgs);
     } else {
@@ -963,7 +1040,7 @@ export function call(
     }
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -994,7 +1071,7 @@ export function callProp(
       extraCacheKey,
     ]),
   ];
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function() {
@@ -1003,7 +1080,7 @@ export function callProp(
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
-    const func = _.get(elem.props, funcName);
+    const func = _get(elem.props, funcName);
     if (func) {
       return func.apply(elem, callArgs);
     } else {
@@ -1011,7 +1088,7 @@ export function callProp(
     }
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -1024,14 +1101,14 @@ export function callProp(
  */
 export function registerRef(elem: React.Component<any>, variableName: Keys) {
   const cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  const cached = _.get(elem, cacheKey);
+  const cached = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(pageElem: any) {
-    _.setWith(elem, variableName, pageElem, Object);
+    _setWith(elem, variableName, pageElem, Object);
   };
 
-  _.setWith(elem, cacheKey, func, Object);
+  _setWith(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -1042,10 +1119,12 @@ export default {
   toggleValue,
   toggleFromEvent,
   toggleArrayMember,
+  toggleArrayMemberFromEvent,
   toggleProp,
   togglePropValue,
   togglePropFromEvent,
   togglePropArrayMember,
+  togglePropArrayMemberFromEvent,
   setProp,
   setPropNumber,
   setPropValue,

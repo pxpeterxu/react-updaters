@@ -15,7 +15,7 @@ declare type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unkno
  * @param obj         object to set
  * @param stateIndex  path to the property to set
  * @param value       value to set to
- * @param withType    if specified, used with _.setWith; currently disabled
+ * @param withType    if specified, used with _setWith; currently disabled
  * @return modified root obj
  */
 export declare function set(obj: Object | any[], keys: Keys, value: any, withType?: any | null): Object | any[];
@@ -102,6 +102,15 @@ export declare function toggleFromEvent(elem: React.Component<any>, stateIndex: 
 export declare function togglePropFromEvent(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys, value: any, preventDefault?: boolean): any;
 /**
  * Get an event handler that will toggle whether a value is present
+ * in an array at the given state key (by adding or removing it);
+ * the value is passed from the calling event
+ * @param elem            React element; usually "this"
+ * @param stateIndex      path (array or string) of array in state to toggle
+ * @param preventDefault  whether to preventDefault
+ */
+export declare function toggleArrayMemberFromEvent(elem: React.Component<any>, stateIndex: Keys, preventDefault?: boolean): any;
+/**
+ * Get an event handler that will toggle whether a value is present
  * in an array at the given state key (by adding or removing it)
  * @param elem            React element; usually "this"
  * @param stateIndex      path (array or string) of array in state to toggle
@@ -113,11 +122,28 @@ export declare function toggleArrayMember(elem: React.Component<any>, stateIndex
  * Get an event handler that will toggle whether a value is present
  * in an array at the given prop key (by adding or removing it)
  * @param elem            React element; usually "this"
- * @param stateIndex      path (array or string) of array in state to toggle
+ * @param propFunc        function to call to update the prop
+ *                        (e.g., 'onPropChanged')
+ * @param propIndex       index of the object to change in props
+ * @param indexInProp     index within the prop of the array to change (or null
+ *                        if propIndex already points to the array)
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
 export declare function togglePropArrayMember(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, value: any, preventDefault?: boolean): any;
+/**
+ * Get an event handler that will toggle whether a value (passed in
+ * as an argument) should be in an array at the given prop key
+ * (by adding or removing it)
+ * @param elem            React element; usually "this"
+ * @param propFunc        function to call to update the prop
+ *                        (e.g., 'onPropChanged')
+ * @param propIndex       index of the object to change in props
+ * @param indexInProp     index within the prop of the array to change (or null
+ *                        if propIndex already points to the array)
+ * @param preventDefault  whether to preventDefault
+ */
+export declare function togglePropArrayMemberFromEvent(elem: React.Component<any>, propFunc: string, propIndex: Keys, indexInProp: Keys | null | undefined, preventDefault?: boolean): any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information given
@@ -286,6 +312,12 @@ export declare function remove(indexToDelete: Keys): (curValue: Object | any[]) 
  */
 export declare function toggleMembership(value: unknown): (curValue: unknown[]) => unknown[];
 /**
+ * Generator of a getNewValue (updater) function that
+ * adds or splices a value (from an event or caller)
+ * from an array based on whether it's in the array
+ */
+export declare function toggleMembershipFromEvent(curValue: unknown[], event: EventOrValue): unknown[];
+/**
  * getNewValue (updater) function that negates the value
  */
 export declare function negate(curValue: unknown): boolean;
@@ -360,10 +392,12 @@ declare const _default: {
     toggleValue: typeof toggleValue;
     toggleFromEvent: typeof toggleFromEvent;
     toggleArrayMember: typeof toggleArrayMember;
+    toggleArrayMemberFromEvent: typeof toggleArrayMemberFromEvent;
     toggleProp: typeof toggleProp;
     togglePropValue: typeof togglePropValue;
     togglePropFromEvent: typeof togglePropFromEvent;
     togglePropArrayMember: typeof togglePropArrayMember;
+    togglePropArrayMemberFromEvent: typeof togglePropArrayMemberFromEvent;
     setProp: typeof setProp;
     setPropNumber: typeof setPropNumber;
     setPropValue: typeof setPropValue;
