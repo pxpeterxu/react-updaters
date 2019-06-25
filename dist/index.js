@@ -302,7 +302,7 @@ function toggleArrayMemberFromEvent(elem, stateIndex, preventDefault) {
 
 
 function toggleArrayMember(elem, stateIndex, value, preventDefault) {
-  return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership']);
+  return changeState(elem, stateIndex, toggleMembership(value), preventDefault, ['toggleMembership', value]);
 }
 /**
  * Get an event handler that will toggle whether a value is present
@@ -452,7 +452,7 @@ function setState(elem, stateIndex, value, preventDefault) {
 
 function deleteState(elem, stateIndex, preventDefault) {
   stateIndex = normalizeKeys(stateIndex);
-  return changeState(elem, stateIndex[0], remove(stateIndex.slice(1)), preventDefault, ['remove', stateIndex]);
+  return changeState(elem, stateIndex[0], remove(stateIndex.slice(1)), preventDefault, ['remove', stateIndex.slice(1)]);
 }
 /**
  * Filters a changed state variable so that we only include

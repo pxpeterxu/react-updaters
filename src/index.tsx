@@ -319,7 +319,7 @@ export function toggleArrayMember(
     stateIndex,
     toggleMembership(value),
     preventDefault,
-    ['toggleMembership'],
+    ['toggleMembership', value],
   );
 }
 
@@ -577,7 +577,7 @@ export function deleteState(
     stateIndex[0],
     remove(stateIndex.slice(1)),
     preventDefault,
-    ['remove', stateIndex],
+    ['remove', stateIndex.slice(1)],
   );
 }
 
