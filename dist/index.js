@@ -906,10 +906,10 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
 function registerRef(elem, variableName) {
   var cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func(pageElem) {
+  func = function func(pageElem) {
     (0, _setWith2["default"])(elem, variableName, pageElem, Object);
   };
 
