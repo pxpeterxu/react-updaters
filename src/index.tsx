@@ -4,15 +4,15 @@ import _get from 'lodash/get';
 import _set from 'lodash/set';
 import _clone from 'lodash/clone';
 
-export function preventDefault(event: Event) {
+export function preventDefault(event: AnyEvent) {
   if (event) event.preventDefault();
 }
 
-export function stopPropagation(event: Event) {
+export function stopPropagation(event: AnyEvent) {
   if (event) event.stopPropagation();
 }
 
-export function preventDefaultAndBlur(event: Event | InputChangeEvent) {
+export function preventDefaultAndBlur<EventT extends AnyEvent>(event: EventT) {
   if (event && event.preventDefault) {
     event.preventDefault();
     event.stopPropagation();
@@ -31,6 +31,7 @@ type EventOrValue = InputChangeEvent | string;
 function getValueFromEventOrValue(e: EventOrValue) {
   return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
 }
+type AnyEvent = React.SyntheticEvent | Event;
 
 type Key = string | number | symbol;
 type Keys = Key | Key[];
@@ -741,7 +742,7 @@ export function renderResponse(
  * @param preventDefault  whether to call preventDefault
  * @return event handler
  */
-export function all(
+export function all<EventT extends AnyEvent>(
   elem: React.Component<any>,
   handlers: Function[],
   preventDefault?: boolean,
@@ -771,9 +772,9 @@ export function all(
       break;
     }
   }
-  if (cached) return cached.func as (e: Event) => void;
+  if (cached) return cached.func as (e: EventT) => void;
 
-  const func = function(e: Event) {
+  const func = function(e: EventT) {
     if (preventDefault) preventDefaultAndBlur(e);
     const origState = elem.state;
 

@@ -1,13 +1,14 @@
 import React from 'react';
-export declare function preventDefault(event: Event): void;
-export declare function stopPropagation(event: Event): void;
-export declare function preventDefaultAndBlur(event: Event | InputChangeEvent): void;
+export declare function preventDefault(event: AnyEvent): void;
+export declare function stopPropagation(event: AnyEvent): void;
+export declare function preventDefaultAndBlur<EventT extends AnyEvent>(event: EventT): void;
 /**
  * Many onChange functions either get passed an event (with the changed value
  * in e.target.value) or just the changed value; this disambiguates the two
  */
 declare type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
 declare type EventOrValue = InputChangeEvent | string;
+declare type AnyEvent = React.SyntheticEvent | Event;
 declare type Key = string | number | symbol;
 declare type Keys = Key | Key[];
 declare type TypeSafeKeys<T> = keyof T | [keyof T, ...(string | number)[]];
@@ -282,7 +283,7 @@ export declare function renderResponse(response: Response, options: {
  * @param preventDefault  whether to call preventDefault
  * @return event handler
  */
-export declare function all(elem: React.Component<any>, handlers: Function[], preventDefault?: boolean): (e: Event) => void;
+export declare function all<EventT extends AnyEvent>(elem: React.Component<any>, handlers: Function[], preventDefault?: boolean): (e: EventT) => void;
 /**
  * getNewValue (updater) function that sets the value to that
  * received in the event
