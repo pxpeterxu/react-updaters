@@ -4,22 +4,27 @@ import _get from 'lodash/get';
 import _set from 'lodash/set';
 import _clone from 'lodash/clone';
 
-/* eslint-disable prefer-rest-params */
-
-export function preventDefault(event: Event) {
+export function preventDefault(event: EventOrReactEvent) {
   if (event) event.preventDefault();
 }
 
-export function stopPropagation(event: Event) {
+export function stopPropagation(event: EventOrReactEvent) {
   if (event) event.stopPropagation();
 }
 
-export function preventDefaultAndBlur(event: Event) {
-  if (event && event.preventDefault) {
+/**
+ * This function can handle any type gracefully, so calling functions don't
+ * have to check if the input is an event. It'll do nothing if the input isn't
+ * an event.
+ */
+export function preventDefaultAndBlur(eventOrAny: any) {
+  if (!(eventOrAny && eventOrAny.preventDefault)) return;
+  const event: EventOrReactEvent = eventOrAny;
+  if (event && eventOrAny.preventDefault) {
     event.preventDefault();
     event.stopPropagation();
-    if (event.target) {
-      (event.target as any).blur();
+    if (event.target && 'blur' in event.target) {
+      event.target.blur();
     }
   }
 }
@@ -28,18 +33,25 @@ export function preventDefaultAndBlur(event: Event) {
  * Many onChange functions either get passed an event (with the changed value
  * in e.target.value) or just the changed value; this disambiguates the two
  */
-type EventOrValue = React.ChangeEvent<HTMLInputElement> | any;
-function getValueFromEventOrValue(e: EventOrValue): any {
-  return e && e.target ? e.target.value : e;
+type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
+type EventOrReactEvent = Event | React.SyntheticEvent | InputChangeEvent;
+type EventOrValue = InputChangeEvent | string;
+function getValueFromEventOrValue(e: EventOrValue) {
+  return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
 }
 
-type Key = string | number;
-type Keys = Key | Key[];
+type Key = string | number | symbol;
+
+/** Type-checks a string key or the first key in an array of keys */
+type TypeSafeKeys<T> = keyof T | TypeSafeKeysArray<T>;
+type TypeSafeKeysArray<T> = [keyof T, ...Key[]];
+
 type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unknown;
 
-function normalizeKeys(keys: Keys): (string | number)[] {
-  if (typeof keys === 'string') keys = keys.split('.');
-  if (!(keys instanceof Array)) keys = [keys];
+function normalizeKeys<T>(keys: TypeSafeKeys<T>): TypeSafeKeysArray<T>;
+
+function normalizeKeys<T>(keys: T | T[]): T[] {
+  if (!(keys instanceof Array)) return [keys];
   return keys;
 }
 
@@ -51,9 +63,9 @@ function normalizeKeys(keys: Keys): (string | number)[] {
  * @param withType    if specified, used with _setWith; currently disabled
  * @return modified root obj
  */
-export function set(
-  obj: Object | any[],
-  keys: Keys,
+export function set<T extends Object>(
+  obj: T,
+  keys: TypeSafeKeys<T>,
   value: any,
   withType?: any | null,
 ) {
@@ -91,7 +103,7 @@ export function set(
  * @param keys  path to the property to get
  * @return value or undefined
  */
-export function get(obj: Object | any[], keys: Keys) {
+export function get<T extends Object>(obj: T, keys: TypeSafeKeys<T>) {
   return _get(obj, keys);
 }
 
@@ -102,23 +114,23 @@ export function get(obj: Object | any[], keys: Keys) {
  * @param keys  path of item to delete
  * @return updated obj (with shallow copies to preserve immutable semantics)
  */
-export function deleteDeep(obj: Object | any[], keys: Keys) {
-  keys = normalizeKeys(keys);
+export function deleteDeep<T extends Object>(obj: T, keys: TypeSafeKeys<T>) {
+  const normalizedKeys = normalizeKeys(keys);
   const keysSoFar = [];
 
   // Clone parents so that we still have good behavior
   // with PureRenderMixin
   obj = _clone(obj);
-  for (let i = 0; i !== keys.length - 1; i++) {
-    const key = keys[i];
+  for (let i = 0; i !== normalizedKeys.length - 1; i++) {
+    const key = normalizedKeys[i];
     keysSoFar.push(key);
     _set(obj, keysSoFar, _clone(_get(obj, keysSoFar)));
   }
 
   // Use the second-to-last key to get the object to delete in
-  const deleteObjKey = keys.slice(0, -1);
+  const deleteObjKey = normalizedKeys.slice(0, -1);
   const deleteObj = deleteObjKey.length !== 0 ? _get(obj, deleteObjKey) : obj;
-  const deleteKey = keys[keys.length - 1];
+  const deleteKey = normalizedKeys[normalizedKeys.length - 1];
 
   if (deleteObj instanceof Array) {
     if (typeof deleteKey !== 'number') {
@@ -145,9 +157,9 @@ export const deleteMixed = deleteDeep;
  * @param stateIndex      path of variable in state to toggle (array or string)
  * @param preventDefault  whether to preventDefault
  */
-export function toggle(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function toggle<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
   return changeState(elem, stateIndex, negate, preventDefault, 'negate');
@@ -163,11 +175,11 @@ export function toggle(
  * @param indexInProp     index within the prop of the value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function toggleProp(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp?: Keys | null,
+export function toggleProp<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp?: TypeSafeKeys<PropT[PropK]> | null,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -189,9 +201,9 @@ export function toggleProp(
  * @param value           value to set (if it's not already the current value)
  * @param preventDefault  whether to preventDefault
  */
-export function toggleValue(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function toggleValue<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -212,11 +224,11 @@ export function toggleValue(
  * @param value           value to set (if it's not already the current value)
  * @param preventDefault  whether to preventDefault
  */
-export function togglePropValue(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null,
+export function togglePropValue<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -239,9 +251,9 @@ export function togglePropValue(
  * @param stateIndex      path of variable in state to toggle (array or string)
  * @param preventDefault  whether to preventDefault
  */
-export function toggleFromEvent(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function toggleFromEvent<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
   return changeState(elem, stateIndex, setOrNull, preventDefault, 'setOrNull');
@@ -259,11 +271,11 @@ export function toggleFromEvent(
  * @param indexInProp     index within the prop of the value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function togglePropFromEvent(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys,
+export function togglePropFromEvent<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]>,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -286,9 +298,9 @@ export function togglePropFromEvent(
  * @param stateIndex      path (array or string) of array in state to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function toggleArrayMemberFromEvent(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function toggleArrayMemberFromEvent<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
   return changeState(
@@ -308,9 +320,9 @@ export function toggleArrayMemberFromEvent(
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function toggleArrayMember(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function toggleArrayMember<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -335,11 +347,11 @@ export function toggleArrayMember(
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function togglePropArrayMember(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function togglePropArrayMember<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -366,11 +378,14 @@ export function togglePropArrayMember(
  *                        if propIndex already points to the array)
  * @param preventDefault  whether to preventDefault
  */
-export function togglePropArrayMemberFromEvent(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function togglePropArrayMemberFromEvent<
+  PropT,
+  PropK extends keyof PropT
+>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -395,11 +410,11 @@ export function togglePropArrayMemberFromEvent(
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export function setProp(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function setProp<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -425,11 +440,11 @@ export function setProp(
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export function setPropNumber(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function setPropNumber<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -455,11 +470,11 @@ export function setPropNumber(
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export function setPropValue(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function setPropValue<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -486,11 +501,11 @@ export function setPropValue(
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export function deleteProp(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys,
+export function deleteProp<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]>,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -511,9 +526,9 @@ export function deleteProp(
  * @param stateIndex      path of variable in state to set
  * @param preventDefault  whether to preventDefault on the event
  */
-export function update(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function update<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
   return changeState(elem, stateIndex, fromEvent, preventDefault, 'fromEvent');
@@ -526,9 +541,9 @@ export function update(
  * @param stateIndex      path of variable in state to set
  * @param preventDefault  whether to preventDefault on the event
  */
-export function updateNumber(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function updateNumber<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
   return changeState(
@@ -547,9 +562,9 @@ export function updateNumber(
  * @param value           value to set the variable to
  * @param preventDefault  whether to preventDefault on the event
  */
-export function setState(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function setState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -566,18 +581,18 @@ export function setState(
  * @param value           value to set the variable to
  * @param preventDefault  whether to preventDefault on the event
  */
-export function deleteState(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function deleteState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
-  stateIndex = normalizeKeys(stateIndex);
+  const arrayStateIndex = normalizeKeys(stateIndex);
   return changeState(
     elem,
     stateIndex[0],
-    remove(stateIndex.slice(1)),
+    remove((arrayStateIndex as any).slice(1)),
     preventDefault,
-    ['remove', stateIndex.slice(1)],
+    ['remove', arrayStateIndex.slice(1)],
   );
 }
 
@@ -588,11 +603,11 @@ export function deleteState(
  * @param changedState   new state
  * @return changeState, with only the keys that are different from origState
  */
-export function getChanged(
-  origState: { [k: string]: any },
-  changedState: { [k: string]: any },
+export function getChanged<StateT extends Object>(
+  origState: StateT,
+  changedState: StateT,
 ) {
-  const changes = {};
+  const changes: Partial<StateT> = {};
   for (const key of Object.keys(changedState)) {
     if (origState[key] !== changedState[key]) {
       changes[key] = changedState[key];
@@ -627,10 +642,10 @@ export function getThen(
     JSON.stringify(['getThen', responseKey, loadingKey]),
   ];
 
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (data: Response) => void = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(data: Response) {
+  func = function(data: Response) {
     const newState = {};
     newState[loadingKey] = false;
     newState[responseKey] = data;
@@ -667,7 +682,7 @@ export function getCatch(
   responseKey = responseKey || 'response';
   loadingKey = loadingKey || 'loading';
 
-  const cached = _get(elem, cacheKey);
+  const cached: (err: Error) => void = _get(elem, cacheKey);
   if (cached) return cached;
 
   const func = function(err: Error) {
@@ -734,6 +749,12 @@ export function renderResponse(
   );
 }
 
+/** Item within the array for the `all()` cache */
+interface AllCacheItem {
+  args: [Function[], boolean | undefined];
+  func: (e?: any) => void;
+}
+
 /**
  * Get an event handler that does all of the entries
  * supplied
@@ -751,10 +772,10 @@ export function all(
   const allCached = _get(elem, cacheKey) || [];
 
   // Try to find one in the cache by deep comparisons
-  let cached = null;
+  let cached: AllCacheItem | null = null;
 
   for (let j = 0; j !== allCached.length; j++) {
-    const item = allCached[j];
+    const item: AllCacheItem = allCached[j];
     const cachedHandlers = item.args[0];
 
     let matched = cachedHandlers.length !== 0;
@@ -774,7 +795,7 @@ export function all(
   }
   if (cached) return cached.func;
 
-  const func = function(e: Event) {
+  const func = function(e?: any) {
     if (preventDefault) preventDefaultAndBlur(e);
     const origState = elem.state;
 
@@ -821,7 +842,7 @@ export function numberFromEvent(curValue: unknown, e: EventOrValue) {
  * Generator of a getNewValue (updater) function that
  * sets the value to a constant specified ahead of time
  */
-export function constant<T>(value: T): (() => T) {
+export function constant<T>(value: T): () => T {
   return function() {
     return value;
   };
@@ -831,8 +852,8 @@ export function constant<T>(value: T): (() => T) {
  * Generator of a getNewValue (updater) function that
  * deletes a key from within an object
  */
-export function remove(indexToDelete: Keys) {
-  return function(curValue: Object | any[]) {
+export function remove<T extends Object>(indexToDelete: TypeSafeKeys<T>) {
+  return function(curValue: T) {
     return deleteMixed(curValue, indexToDelete);
   };
 }
@@ -882,8 +903,8 @@ export function negate(curValue: unknown) {
  * getNewValue (updater) function that sets the value to that of the constant,
  * or if it's already the same, nulls it
  */
-export function toggleConstant(value: unknown | null) {
-  return function(curValue: unknown) {
+export function toggleConstant<T>(value: T | null) {
+  return function(curValue: T | null) {
     return curValue === value ? null : value;
   };
 }
@@ -909,11 +930,11 @@ export function setOrNull(curValue: any, e: EventOrValue) {
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return function to handle events or values being changed
  */
-export function changeProp(
-  elem: React.Component<any>,
-  propFunc: string,
-  propIndex: Keys,
-  indexInProp: Keys | null | undefined,
+export function changeProp<PropT, PropK extends keyof PropT>(
+  elem: React.Component<PropT>,
+  propFunc: keyof PropT,
+  propIndex: PropK,
+  indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,
   getNewValue: GetNewValueFunc,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -929,10 +950,10 @@ export function changeProp(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (e?: any) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(e: Event) {
+  func = function(e?: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     let newPropObj = null;
@@ -949,7 +970,7 @@ export function changeProp(
       newPropObj = getNewValue(null, e);
     }
 
-    elem.props[propFunc](newPropObj);
+    (elem.props[propFunc] as any)(newPropObj);
     return newPropObj;
   };
 
@@ -967,9 +988,9 @@ export function changeProp(
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return function to handle events or values being changed
  */
-export function changeState(
-  elem: React.Component<any>,
-  stateIndex: Keys,
+export function changeState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
+  stateIndex: TypeSafeKeys<StateT>,
   getNewValue: GetNewValueFunc,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -978,17 +999,19 @@ export function changeState(
     '__cache',
     JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (e?: any) => StateT = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(e: Event) {
+  func = function(e?: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     const curValue = getMixed(elem.state, stateIndex);
     const newValue = getNewValue(curValue, e);
-    const newState = setMixed(elem.state, stateIndex, newValue);
+    const newState: StateT = setMixed(elem.state, stateIndex, newValue);
 
-    elem.setState(getChanged(elem.state, newState));
+    // We need the cast because Partial<StateT> can't be assigned to the
+    // value of setState due to the stricter type-checking
+    elem.setState(getChanged(elem.state, newState) as StateT);
     return newState;
   };
 
@@ -1006,9 +1029,9 @@ export function changeState(
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return handler that calls a component function
  */
-export function call(
-  elem: React.Component<any>,
-  funcName: Keys,
+export function call<T extends Object>(
+  elem: T,
+  funcName: keyof T,
   prefixArgs?: any[] | null,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -1023,18 +1046,16 @@ export function call(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (...args: any[]) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function() {
-    const args = Array.prototype.slice.call(arguments);
-
+  func = function(...args: any[]) {
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
     const func = _get(elem, funcName);
     if (func) {
-      return func.apply(elem, callArgs);
+      return (func as any).apply(elem, callArgs);
     } else {
       return null;
     }
@@ -1054,9 +1075,9 @@ export function call(
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return handler that calls a component function
  */
-export function callProp(
-  elem: React.Component<any>,
-  funcName: Keys,
+export function callProp<PropT>(
+  elem: React.Component<PropT>,
+  funcName: keyof PropT,
   prefixArgs?: any[] | null,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -1071,18 +1092,16 @@ export function callProp(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (...args: any[]) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function() {
-    const args = Array.prototype.slice.call(arguments);
-
+  func = function(...args: any[]) {
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
     const func = _get(elem.props, funcName);
     if (func) {
-      return func.apply(elem, callArgs);
+      return (func as any).apply(elem, callArgs);
     } else {
       return null;
     }
@@ -1093,18 +1112,21 @@ export function callProp(
 }
 
 /**
+ * @deprecated
+ * Prefer using `React.createRef` object-based refs instead of this function.
+ *
  * Get a function to be used with ref={} to register a ref into
- * a variable in the current object
+ * a variable in the current object.
  * @param {Object} elem          React component (usually `this`)
  * @param {String} variableName  Name to save ref (e.g., '_elem' for this._elem)
  * @return {function} handler for ref=}}
  */
-export function registerRef(elem: React.Component<any>, variableName: Keys) {
+export function registerRef<T extends Object>(elem: T, variableName: keyof T) {
   const cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (pageElem: any) => void = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(pageElem: any) {
+  func = function(pageElem: any) {
     _setWith(elem, variableName, pageElem, Object);
   };
 
