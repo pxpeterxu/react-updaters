@@ -411,7 +411,7 @@ export function togglePropArrayMemberFromEvent<
  * @return function to handle events or values being changed
  */
 export function setProp<PropT, PropK extends keyof PropT>(
-  elem: React.Component<any>,
+  elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: PropK,
   indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined,

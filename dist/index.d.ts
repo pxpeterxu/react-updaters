@@ -164,7 +164,7 @@ export declare function togglePropArrayMemberFromEvent<PropT, PropK extends keyo
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setProp<PropT, PropK extends keyof PropT>(elem: React.Component<any>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, preventDefault?: boolean): (e?: any) => any;
+export declare function setProp<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information from an event
