@@ -626,10 +626,10 @@ export function getThen(
     JSON.stringify(['getThen', responseKey, loadingKey]),
   ];
 
-  const cached: (data: Response) => void = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (data: Response) => void = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(data: Response) {
+  func = function(data: Response) {
     const newState = {};
     newState[loadingKey] = false;
     newState[responseKey] = data;
@@ -733,6 +733,12 @@ export function renderResponse(
   );
 }
 
+/** Item within the array for the `all()` cache */
+interface AllCacheItem {
+  args: [Function[], boolean | undefined];
+  func: (e: any) => void;
+}
+
 /**
  * Get an event handler that does all of the entries
  * supplied
@@ -741,7 +747,7 @@ export function renderResponse(
  * @param preventDefault  whether to call preventDefault
  * @return event handler
  */
-export function all<T>(
+export function all(
   elem: React.Component<any>,
   handlers: Function[],
   preventDefault?: boolean,
@@ -750,10 +756,10 @@ export function all<T>(
   const allCached = _get(elem, cacheKey) || [];
 
   // Try to find one in the cache by deep comparisons
-  let cached = null;
+  let cached: AllCacheItem | null = null;
 
   for (let j = 0; j !== allCached.length; j++) {
-    const item = allCached[j];
+    const item: AllCacheItem = allCached[j];
     const cachedHandlers = item.args[0];
 
     let matched = cachedHandlers.length !== 0;
@@ -771,10 +777,12 @@ export function all<T>(
       break;
     }
   }
-  if (cached) return cached.func as (e: T) => void;
+  if (cached) return cached.func;
 
-  const func = function(e: T) {
-    if (preventDefault && 'preventDefault' in e) preventDefaultAndBlur(e as any);
+  const func = function(e: any) {
+    if (preventDefault && 'preventDefault' in e) {
+      preventDefaultAndBlur(e);
+    }
     const origState = elem.state;
 
     for (let i = 0; i !== handlers.length; i++) {
@@ -820,7 +828,7 @@ export function numberFromEvent(curValue: unknown, e: EventOrValue) {
  * Generator of a getNewValue (updater) function that
  * sets the value to a constant specified ahead of time
  */
-export function constant<T>(value: T): (() => T) {
+export function constant<T>(value: T): () => T {
   return function() {
     return value;
   };
@@ -928,10 +936,10 @@ export function changeProp<PropT>(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (e: any) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(e: InputChangeEvent) {
+  func = function(e: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     let newPropObj = null;
@@ -977,10 +985,10 @@ export function changeState<PropT, StateT>(
     '__cache',
     JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (e: any) => StateT = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(e: InputChangeEvent) {
+  func = function(e: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     const curValue = getMixed(elem.state, stateIndex);
@@ -1024,12 +1032,10 @@ export function call<T extends Object>(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (...args: any[]) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function() {
-    const args = Array.prototype.slice.call(arguments);
-
+  func = function(...args: any[]) {
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
@@ -1072,12 +1078,10 @@ export function callProp<PropT>(
       extraCacheKey,
     ]),
   ];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (...args: any[]) => any = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function() {
-    const args = Array.prototype.slice.call(arguments);
-
+  func = function(...args: any[]) {
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     const callArgs = (prefixArgs || []).concat(args);
 
@@ -1096,7 +1100,7 @@ export function callProp<PropT>(
 /**
  * @deprecated
  * Prefer using `React.createRef` object-based refs instead of this function.
- * 
+ *
  * Get a function to be used with ref={} to register a ref into
  * a variable in the current object.
  * @param {Object} elem          React component (usually `this`)
