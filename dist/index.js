@@ -488,10 +488,10 @@ function getThen(elem) {
   var dataKey = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'data';
   // Avoid creating new functions if possible
   var cacheKey = ['__cache', JSON.stringify(['getThen', responseKey, loadingKey])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func(data) {
+  func = function func(data) {
     var newState = {};
     newState[loadingKey] = false;
     newState[responseKey] = data;
@@ -570,6 +570,9 @@ function renderResponse(response, options) {
     }, message);
   }));
 }
+/** Item within the array for the `all()` cache */
+
+
 /**
  * Get an event handler that does all of the entries
  * supplied
@@ -578,8 +581,6 @@ function renderResponse(response, options) {
  * @param preventDefault  whether to call preventDefault
  * @return event handler
  */
-
-
 function all(elem, handlers, preventDefault) {
   var cacheKey = ['__cache', 'all'];
   var allCached = (0, _get2["default"])(elem, cacheKey) || []; // Try to find one in the cache by deep comparisons
@@ -609,7 +610,10 @@ function all(elem, handlers, preventDefault) {
   if (cached) return cached.func;
 
   var func = function func(e) {
-    if (preventDefault && 'preventDefault' in e) preventDefaultAndBlur(e);
+    if (preventDefault && 'preventDefault' in e) {
+      preventDefaultAndBlur(e);
+    }
+
     var origState = elem.state;
 
     for (var _i2 = 0; _i2 !== handlers.length; _i2++) {
@@ -756,10 +760,10 @@ function setOrNull(curValue, e) {
 
 function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['changeProp', propFunc, propIndex, indexInProp, preventDefault, extraCacheKey])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func(e) {
+  func = function func(e) {
     if (preventDefault) preventDefaultAndBlur(e);
     var newPropObj = null;
 
@@ -799,10 +803,10 @@ function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, prevent
 
 function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func(e) {
+  func = function func(e) {
     if (preventDefault) preventDefaultAndBlur(e);
     var curValue = getMixed(elem.state, stateIndex);
     var newValue = getNewValue(curValue, e);
@@ -830,11 +834,14 @@ function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKe
 
 function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['call', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func() {
-    var args = Array.prototype.slice.call(arguments);
+  func = function func() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     var callArgs = (prefixArgs || []).concat(args);
     var func = (0, _get2["default"])(elem, funcName);
@@ -863,11 +870,14 @@ function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
 function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['callProp', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var cached = (0, _get2["default"])(elem, cacheKey);
-  if (cached) return cached;
+  var func = (0, _get2["default"])(elem, cacheKey);
+  if (func) return func;
 
-  var func = function func() {
-    var args = Array.prototype.slice.call(arguments);
+  func = function func() {
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     var callArgs = (prefixArgs || []).concat(args);
     var func = (0, _get2["default"])(elem.props, funcName);
@@ -885,7 +895,7 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 /**
  * @deprecated
  * Prefer using `React.createRef` object-based refs instead of this function.
- * 
+ *
  * Get a function to be used with ref={} to register a ref into
  * a variable in the current object.
  * @param {Object} elem          React component (usually `this`)
