@@ -4,20 +4,27 @@ import _get from 'lodash/get';
 import _set from 'lodash/set';
 import _clone from 'lodash/clone';
 
-export function preventDefault(event: Event) {
+export function preventDefault(event: EventOrReactEvent) {
   if (event) event.preventDefault();
 }
 
-export function stopPropagation(event: Event) {
+export function stopPropagation(event: EventOrReactEvent) {
   if (event) event.stopPropagation();
 }
 
-export function preventDefaultAndBlur(event: React.SyntheticEvent | Event) {
-  if (event && event.preventDefault) {
+/**
+ * This function can handle any type gracefully, so calling functions don't
+ * have to check if the input is an event. It'll do nothing if the input isn't
+ * an event.
+ */
+export function preventDefaultAndBlur(eventOrAny: any) {
+  if (!(eventOrAny && eventOrAny.preventDefault)) return;
+  const event: EventOrReactEvent = eventOrAny;
+  if (event && eventOrAny.preventDefault) {
     event.preventDefault();
     event.stopPropagation();
-    if (event.target) {
-      (event.target as any).blur();
+    if (event.target && 'blur' in event.target) {
+      event.target.blur();
     }
   }
 }
@@ -27,15 +34,114 @@ export function preventDefaultAndBlur(event: React.SyntheticEvent | Event) {
  * in e.target.value) or just the changed value; this disambiguates the two
  */
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
+type EventOrReactEvent = Event | React.SyntheticEvent | InputChangeEvent;
 type EventOrValue = InputChangeEvent | string;
 function getValueFromEventOrValue(e: EventOrValue) {
   return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
 }
 
 type Key = string | number | symbol;
-type Keys = Key | Key[];
-type TypeSafeKeys<T> = keyof T | [keyof T, ...(string | number)[]];
+
+/** This complex type allows us to typecheck arrays of paths up to 5 deep */
+type TypeSafeKeys<T, T1 extends keyof T = keyof T> = T1 | TypeSafeKeysArray<T>;
+type TypeSafeKeysArray<
+  T,
+  T1 extends keyof T = keyof T,
+  T2 extends keyof T[T1] = keyof T[T1],
+  T3 extends keyof T[T1][T2] = keyof T[T1][T2],
+  T4 extends keyof T[T1][T2][T3] = keyof T[T1][T2][T3],
+  T5 extends keyof T[T1][T2][T3][T4] = keyof T[T1][T2][T3][T4]
+> =
+  | TypeSafeKeysArray1<T, T1>
+  | TypeSafeKeysArray2<T, T1, T2>
+  | TypeSafeKeysArray3<T, T1, T2, T3>
+  | TypeSafeKeysArray4<T, T1, T2, T3, T4>
+  | TypeSafeKeysArray5Plus<T, T1, T2, T3, T4, T5>;
+type TypeSafeKeysArray1<T, T1 extends keyof T> = [T1];
+type TypeSafeKeysArray2<T, T1 extends keyof T, T2 extends keyof T[T1]> = [
+  T1,
+  T2,
+];
+type TypeSafeKeysArray3<
+  T,
+  T1 extends keyof T,
+  T2 extends keyof T[T1],
+  T3 extends keyof T[T1][T2]
+> = [T1, T2, T3];
+type TypeSafeKeysArray4<
+  T,
+  T1 extends keyof T,
+  T2 extends keyof T[T1],
+  T3 extends keyof T[T1][T2],
+  T4 extends keyof T[T1][T2][T3]
+> = [T1, T2, T3, T4];
+type TypeSafeKeysArray5Plus<
+  T,
+  T1 extends keyof T,
+  T2 extends keyof T[T1],
+  T3 extends keyof T[T1][T2],
+  T4 extends keyof T[T1][T2][T3],
+  T5 extends keyof T[T1][T2][T3][T4]
+> = [T1, T2, T3, T4, T5, ...Key[]];
+
+/**
+ * Like TypeSafeKeys, but for `indexInProp` which excludes the prop itself.
+ * Typechecks keys (including array keys) up to 5 levels deep.
+ */
+type TypeSafeIndexInProp<
+  T,
+  PropK extends keyof T = keyof T,
+  T1 extends keyof T[PropK] = keyof T[PropK],
+  T2 extends keyof T[PropK][T1] = keyof T[PropK][T1],
+  T3 extends keyof T[PropK][T1][T2] = keyof T[PropK][T1][T2],
+  T4 extends keyof T[PropK][T1][T2][T3] = keyof T[PropK][T1][T2][T3],
+  T5 extends keyof T[PropK][T1][T2][T3][T4] = keyof T[PropK][T1][T2][T3][T4]
+> =
+  | T1
+  | TypeSafeIndexInPropArray1<T, PropK, T1>
+  | TypeSafeIndexInPropArray2<T, PropK, T1, T2>
+  | TypeSafeIndexInPropArray3<T, PropK, T1, T2, T3>
+  | TypeSafeIndexInPropArray4<T, PropK, T1, T2, T3, T4>
+  | TypeSafeIndexInPropArray5Plus<T, PropK, T1, T2, T3, T4, T5>;
+type TypeSafeIndexInPropArray1<
+  T,
+  PropK extends keyof T,
+  T1 extends keyof T[PropK]
+> = [T1];
+type TypeSafeIndexInPropArray2<
+  T,
+  PropK extends keyof T,
+  T1 extends keyof T[PropK],
+  T2 extends keyof T[PropK][T1]
+> = [T1, T2];
+type TypeSafeIndexInPropArray3<
+  T,
+  PropK extends keyof T,
+  T1 extends keyof T[PropK],
+  T2 extends keyof T[PropK][T1],
+  T3 extends keyof T[PropK][T1][T2]
+> = [T1, T2, T3];
+type TypeSafeIndexInPropArray4<
+  T,
+  PropK extends keyof T,
+  T1 extends keyof T[PropK],
+  T2 extends keyof T[PropK][T1],
+  T3 extends keyof T[PropK][T1][T2],
+  T4 extends keyof T[PropK][T1][T2][T3]
+> = [T1, T2, T3, T4];
+type TypeSafeIndexInPropArray5Plus<
+  T,
+  PropK extends keyof T,
+  T1 extends keyof T[PropK],
+  T2 extends keyof T[PropK][T1],
+  T3 extends keyof T[PropK][T1][T2],
+  T4 extends keyof T[PropK][T1][T2][T3],
+  T5 extends keyof T[PropK][T1][T2][T3][T4]
+> = [T1, T2, T3, T4, T5, ...Key[]];
+
 type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unknown;
+
+function normalizeKeys<T>(keys: TypeSafeKeys<T>): TypeSafeKeysArray<T>;
 
 function normalizeKeys<T>(keys: T | T[]): T[] {
   if (!(keys instanceof Array)) return [keys];
@@ -52,7 +158,7 @@ function normalizeKeys<T>(keys: T | T[]): T[] {
  */
 export function set<T extends Object>(
   obj: T,
-  keys: Keys,
+  keys: TypeSafeKeys<T>,
   value: any,
   withType?: any | null,
 ) {
@@ -90,7 +196,7 @@ export function set<T extends Object>(
  * @param keys  path to the property to get
  * @return value or undefined
  */
-export function get(obj: Object | any[], keys: Keys) {
+export function get<T extends Object>(obj: T, keys: TypeSafeKeys<T>) {
   return _get(obj, keys);
 }
 
@@ -101,23 +207,23 @@ export function get(obj: Object | any[], keys: Keys) {
  * @param keys  path of item to delete
  * @return updated obj (with shallow copies to preserve immutable semantics)
  */
-export function deleteDeep<T extends Object>(obj: T, keys: Keys) {
-  keys = normalizeKeys(keys);
+export function deleteDeep<T extends Object>(obj: T, keys: TypeSafeKeys<T>) {
+  const normalizedKeys = normalizeKeys(keys);
   const keysSoFar = [];
 
   // Clone parents so that we still have good behavior
   // with PureRenderMixin
   obj = _clone(obj);
-  for (let i = 0; i !== keys.length - 1; i++) {
-    const key = keys[i];
+  for (let i = 0; i !== normalizedKeys.length - 1; i++) {
+    const key = normalizedKeys[i];
     keysSoFar.push(key);
     _set(obj, keysSoFar, _clone(_get(obj, keysSoFar)));
   }
 
   // Use the second-to-last key to get the object to delete in
-  const deleteObjKey = keys.slice(0, -1);
+  const deleteObjKey = normalizedKeys.slice(0, -1);
   const deleteObj = deleteObjKey.length !== 0 ? _get(obj, deleteObjKey) : obj;
-  const deleteKey = keys[keys.length - 1];
+  const deleteKey = normalizedKeys[normalizedKeys.length - 1];
 
   if (deleteObj instanceof Array) {
     if (typeof deleteKey !== 'number') {
@@ -166,7 +272,7 @@ export function toggleProp<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp?: Keys | null,
+  indexInProp?: TypeSafeIndexInProp<PropT> | null,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -215,7 +321,7 @@ export function togglePropValue<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null,
+  indexInProp: TypeSafeIndexInProp<PropT> | null,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -262,7 +368,7 @@ export function togglePropFromEvent<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys,
+  indexInProp: TypeSafeIndexInProp<PropT>,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -338,7 +444,7 @@ export function togglePropArrayMember<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -369,7 +475,7 @@ export function togglePropArrayMemberFromEvent<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -398,7 +504,7 @@ export function setProp<PropT>(
   elem: React.Component<any>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -428,7 +534,7 @@ export function setPropNumber<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -458,7 +564,7 @@ export function setPropValue<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   value: any,
   preventDefault?: boolean,
 ) {
@@ -489,7 +595,7 @@ export function deleteProp<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys,
+  indexInProp: TypeSafeIndexInProp<PropT>,
   preventDefault?: boolean,
 ) {
   return changeProp(
@@ -574,7 +680,7 @@ export function deleteState<PropT, StateT>(
   return changeState(
     elem,
     stateIndex[0],
-    remove(arrayStateIndex.slice(1)),
+    remove((arrayStateIndex as any).slice(1)),
     preventDefault,
     ['remove', arrayStateIndex.slice(1)],
   );
@@ -780,9 +886,7 @@ export function all(
   if (cached) return cached.func;
 
   const func = function(e?: any) {
-    if (preventDefault && 'preventDefault' in e) {
-      preventDefaultAndBlur(e);
-    }
+    if (preventDefault) preventDefaultAndBlur(e);
     const origState = elem.state;
 
     for (let i = 0; i !== handlers.length; i++) {
@@ -838,8 +942,8 @@ export function constant<T>(value: T): () => T {
  * Generator of a getNewValue (updater) function that
  * deletes a key from within an object
  */
-export function remove(indexToDelete: Keys) {
-  return function<T extends Object>(curValue: T) {
+export function remove<T extends Object>(indexToDelete: TypeSafeKeys<T>) {
+  return function(curValue: T) {
     return deleteMixed(curValue, indexToDelete);
   };
 }
@@ -920,7 +1024,7 @@ export function changeProp<PropT>(
   elem: React.Component<PropT>,
   propFunc: keyof PropT,
   propIndex: keyof PropT,
-  indexInProp: Keys | null | undefined,
+  indexInProp: TypeSafeIndexInProp<PropT> | null | undefined,
   getNewValue: GetNewValueFunc,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -1107,7 +1211,7 @@ export function callProp<PropT>(
  * @param {String} variableName  Name to save ref (e.g., '_elem' for this._elem)
  * @return {function} handler for ref=}}
  */
-export function registerRef<T extends Object>(elem: T, variableName: Keys) {
+export function registerRef<T extends Object>(elem: T, variableName: keyof T) {
   const cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
   let func: (pageElem: any) => void = _get(elem, cacheKey);
   if (func) return func;

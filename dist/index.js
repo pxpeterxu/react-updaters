@@ -46,7 +46,7 @@ exports.changeState = changeState;
 exports.call = call;
 exports.callProp = callProp;
 exports.registerRef = registerRef;
-exports["default"] = exports.deleteMixed = exports.getMixed = exports.setMixed = void 0;
+exports.default = exports.deleteMixed = exports.getMixed = exports.setMixed = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 
@@ -58,7 +58,7 @@ var _set2 = _interopRequireDefault(require("lodash/set"));
 
 var _clone2 = _interopRequireDefault(require("lodash/clone"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -69,13 +69,22 @@ function preventDefault(event) {
 function stopPropagation(event) {
   if (event) event.stopPropagation();
 }
+/**
+ * This function can handle any type gracefully, so calling functions don't
+ * have to check if the input is an event. It'll do nothing if the input isn't
+ * an event.
+ */
 
-function preventDefaultAndBlur(event) {
-  if (event && event.preventDefault) {
+
+function preventDefaultAndBlur(eventOrAny) {
+  if (!(eventOrAny && eventOrAny.preventDefault)) return;
+  var event = eventOrAny;
+
+  if (event && eventOrAny.preventDefault) {
     event.preventDefault();
     event.stopPropagation();
 
-    if (event.target) {
+    if (event.target && 'blur' in event.target) {
       event.target.blur();
     }
   }
@@ -106,7 +115,7 @@ function normalizeKeys(keys) {
 
 function set(obj, keys, value, withType) {
   keys = normalizeKeys(keys);
-  var curValue = keys && keys.length !== 0 ? (0, _get2["default"])(obj, keys) : obj;
+  var curValue = keys && keys.length !== 0 ? (0, _get2.default)(obj, keys) : obj;
 
   if (curValue === value) {
     // Prevent unneeded changes
@@ -116,18 +125,18 @@ function set(obj, keys, value, withType) {
   var keysSoFar = []; // Clone parents so that we still have good behavior
   // with PureRenderMixin
 
-  obj = (0, _clone2["default"])(obj);
+  obj = (0, _clone2.default)(obj);
 
   for (var i = 0; i !== keys.length - 1; i++) {
     var key = keys[i];
     keysSoFar.push(key);
-    (0, _set2["default"])(obj, keysSoFar, (0, _clone2["default"])((0, _get2["default"])(obj, keysSoFar)));
+    (0, _set2.default)(obj, keysSoFar, (0, _clone2.default)((0, _get2.default)(obj, keysSoFar)));
   }
 
   if (!withType) {
-    (0, _set2["default"])(obj, keys, value);
+    (0, _set2.default)(obj, keys, value);
   } else {
-    (0, _setWith2["default"])(obj, keys, value, withType);
+    (0, _setWith2.default)(obj, keys, value, withType);
   }
 
   return obj;
@@ -142,7 +151,7 @@ function set(obj, keys, value, withType) {
 
 
 function get(obj, keys) {
-  return (0, _get2["default"])(obj, keys);
+  return (0, _get2.default)(obj, keys);
 }
 /**
  * Delete a variable deep in a map that's potentially partly
@@ -154,22 +163,22 @@ function get(obj, keys) {
 
 
 function deleteDeep(obj, keys) {
-  keys = normalizeKeys(keys);
+  var normalizedKeys = normalizeKeys(keys);
   var keysSoFar = []; // Clone parents so that we still have good behavior
   // with PureRenderMixin
 
-  obj = (0, _clone2["default"])(obj);
+  obj = (0, _clone2.default)(obj);
 
-  for (var i = 0; i !== keys.length - 1; i++) {
-    var key = keys[i];
+  for (var i = 0; i !== normalizedKeys.length - 1; i++) {
+    var key = normalizedKeys[i];
     keysSoFar.push(key);
-    (0, _set2["default"])(obj, keysSoFar, (0, _clone2["default"])((0, _get2["default"])(obj, keysSoFar)));
+    (0, _set2.default)(obj, keysSoFar, (0, _clone2.default)((0, _get2.default)(obj, keysSoFar)));
   } // Use the second-to-last key to get the object to delete in
 
 
-  var deleteObjKey = keys.slice(0, -1);
-  var deleteObj = deleteObjKey.length !== 0 ? (0, _get2["default"])(obj, deleteObjKey) : obj;
-  var deleteKey = keys[keys.length - 1];
+  var deleteObjKey = normalizedKeys.slice(0, -1);
+  var deleteObj = deleteObjKey.length !== 0 ? (0, _get2.default)(obj, deleteObjKey) : obj;
+  var deleteKey = normalizedKeys[normalizedKeys.length - 1];
 
   if (deleteObj instanceof Array) {
     if (typeof deleteKey !== 'number') {
@@ -488,7 +497,7 @@ function getThen(elem) {
   var dataKey = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'data';
   // Avoid creating new functions if possible
   var cacheKey = ['__cache', JSON.stringify(['getThen', responseKey, loadingKey])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func(data) {
@@ -503,7 +512,7 @@ function getThen(elem) {
     elem.setState(newState);
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -522,7 +531,7 @@ function getCatch(elem) {
   var cacheKey = ['__cache', JSON.stringify(['getCatch', responseKey, loadingKey])];
   responseKey = responseKey || 'response';
   loadingKey = loadingKey || 'loading';
-  var cached = (0, _get2["default"])(elem, cacheKey);
+  var cached = (0, _get2.default)(elem, cacheKey);
   if (cached) return cached;
 
   var func = function func(err) {
@@ -537,7 +546,7 @@ function getCatch(elem) {
     elem.setState(newState);
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -561,11 +570,11 @@ function renderResponse(response, options) {
   var errorsOnly = !!options.errorsOnly;
   if (!response) return null;
   if (response.success && errorsOnly) return null;
-  return response && response.messages && _react["default"].createElement("div", {
+  return response && response.messages && _react.default.createElement("div", {
     className: "".concat(type, " ").concat(type, "-") + (response.success ? 'success' : 'danger') + (additionalClasses ? ' ' + additionalClasses : '') + (onClick ? ' wa-link' : ''),
     onClick: onClick
   }, response.messages.map(function (message, i) {
-    return _react["default"].createElement("p", {
+    return _react.default.createElement("p", {
       key: i
     }, message);
   }));
@@ -583,7 +592,7 @@ function renderResponse(response, options) {
  */
 function all(elem, handlers, preventDefault) {
   var cacheKey = ['__cache', 'all'];
-  var allCached = (0, _get2["default"])(elem, cacheKey) || []; // Try to find one in the cache by deep comparisons
+  var allCached = (0, _get2.default)(elem, cacheKey) || []; // Try to find one in the cache by deep comparisons
 
   var cached = null;
 
@@ -610,10 +619,7 @@ function all(elem, handlers, preventDefault) {
   if (cached) return cached.func;
 
   var func = function func(e) {
-    if (preventDefault && 'preventDefault' in e) {
-      preventDefaultAndBlur(e);
-    }
-
+    if (preventDefault) preventDefaultAndBlur(e);
     var origState = elem.state;
 
     for (var _i2 = 0; _i2 !== handlers.length; _i2++) {
@@ -632,7 +638,7 @@ function all(elem, handlers, preventDefault) {
     func: func
   };
   allCached.push(cached);
-  (0, _set2["default"])(elem, cacheKey, allCached);
+  (0, _set2.default)(elem, cacheKey, allCached);
   return func;
 }
 /**
@@ -760,7 +766,7 @@ function setOrNull(curValue, e) {
 
 function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['changeProp', propFunc, propIndex, indexInProp, preventDefault, extraCacheKey])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func(e) {
@@ -786,7 +792,7 @@ function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, prevent
     return newPropObj;
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -803,7 +809,7 @@ function changeProp(elem, propFunc, propIndex, indexInProp, getNewValue, prevent
 
 function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func(e) {
@@ -817,7 +823,7 @@ function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKe
     return newState;
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -834,7 +840,7 @@ function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKe
 
 function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['call', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func() {
@@ -844,7 +850,7 @@ function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     var callArgs = (prefixArgs || []).concat(args);
-    var func = (0, _get2["default"])(elem, funcName);
+    var func = (0, _get2.default)(elem, funcName);
 
     if (func) {
       return func.apply(elem, callArgs);
@@ -853,7 +859,7 @@ function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
     }
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -870,7 +876,7 @@ function call(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
 function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
   var cacheKey = ['__cache', JSON.stringify(['callProp', funcName, prefixArgs, preventDefault, extraCacheKey])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func() {
@@ -880,7 +886,7 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
     if (preventDefault && args[0]) preventDefaultAndBlur(args[0]);
     var callArgs = (prefixArgs || []).concat(args);
-    var func = (0, _get2["default"])(elem.props, funcName);
+    var func = (0, _get2.default)(elem.props, funcName);
 
     if (func) {
       return func.apply(elem, callArgs);
@@ -889,7 +895,7 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
     }
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 /**
@@ -906,14 +912,14 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
 
 function registerRef(elem, variableName) {
   var cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  var func = (0, _get2["default"])(elem, cacheKey);
+  var func = (0, _get2.default)(elem, cacheKey);
   if (func) return func;
 
   func = function func(pageElem) {
-    (0, _setWith2["default"])(elem, variableName, pageElem, Object);
+    (0, _setWith2.default)(elem, variableName, pageElem, Object);
   };
 
-  (0, _setWith2["default"])(elem, cacheKey, func, Object);
+  (0, _setWith2.default)(elem, cacheKey, func, Object);
   return func;
 }
 
@@ -964,5 +970,5 @@ var _default = {
   get: get,
   deleteDeep: deleteDeep
 };
-exports["default"] = _default;
+exports.default = _default;
 
