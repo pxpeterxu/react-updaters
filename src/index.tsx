@@ -144,8 +144,8 @@ export const deleteMixed = deleteDeep;
  * @param stateIndex      path of variable in state to toggle (array or string)
  * @param preventDefault  whether to preventDefault
  */
-export function toggle<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function toggle<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -188,8 +188,8 @@ export function toggleProp<PropT>(
  * @param value           value to set (if it's not already the current value)
  * @param preventDefault  whether to preventDefault
  */
-export function toggleValue<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function toggleValue<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
@@ -238,8 +238,8 @@ export function togglePropValue<PropT>(
  * @param stateIndex      path of variable in state to toggle (array or string)
  * @param preventDefault  whether to preventDefault
  */
-export function toggleFromEvent<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function toggleFromEvent<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -285,8 +285,8 @@ export function togglePropFromEvent<PropT>(
  * @param stateIndex      path (array or string) of array in state to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function toggleArrayMemberFromEvent<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function toggleArrayMemberFromEvent<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -307,8 +307,8 @@ export function toggleArrayMemberFromEvent<StateT>(
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export function toggleArrayMember<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function toggleArrayMember<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
@@ -510,8 +510,8 @@ export function deleteProp<PropT>(
  * @param stateIndex      path of variable in state to set
  * @param preventDefault  whether to preventDefault on the event
  */
-export function update<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function update<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -525,8 +525,8 @@ export function update<StateT>(
  * @param stateIndex      path of variable in state to set
  * @param preventDefault  whether to preventDefault on the event
  */
-export function updateNumber<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function updateNumber<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -546,8 +546,8 @@ export function updateNumber<StateT>(
  * @param value           value to set the variable to
  * @param preventDefault  whether to preventDefault on the event
  */
-export function setState<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function setState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   value: any,
   preventDefault?: boolean,
@@ -565,8 +565,8 @@ export function setState<StateT>(
  * @param value           value to set the variable to
  * @param preventDefault  whether to preventDefault on the event
  */
-export function deleteState<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function deleteState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   preventDefault?: boolean,
 ) {
@@ -966,8 +966,8 @@ export function changeProp<PropT>(
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return function to handle events or values being changed
  */
-export function changeState<StateT>(
-  elem: React.Component<unknown, StateT>,
+export function changeState<PropT, StateT>(
+  elem: React.Component<PropT, StateT>,
   stateIndex: TypeSafeKeys<StateT>,
   getNewValue: GetNewValueFunc,
   preventDefault?: boolean,
