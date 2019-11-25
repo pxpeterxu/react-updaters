@@ -736,7 +736,7 @@ export function renderResponse(
 /** Item within the array for the `all()` cache */
 interface AllCacheItem {
   args: [Function[], boolean | undefined];
-  func: (e: any) => void;
+  func: (e?: any) => void;
 }
 
 /**
@@ -779,7 +779,7 @@ export function all(
   }
   if (cached) return cached.func;
 
-  const func = function(e: any) {
+  const func = function(e?: any) {
     if (preventDefault && 'preventDefault' in e) {
       preventDefaultAndBlur(e);
     }
@@ -936,10 +936,10 @@ export function changeProp<PropT>(
       extraCacheKey,
     ]),
   ];
-  let func: (e: any) => any = _get(elem, cacheKey);
+  let func: (e?: any) => any = _get(elem, cacheKey);
   if (func) return func;
 
-  func = function(e: any) {
+  func = function(e?: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     let newPropObj = null;
@@ -985,10 +985,10 @@ export function changeState<PropT, StateT>(
     '__cache',
     JSON.stringify(['changeState', stateIndex, preventDefault, extraCacheKey]),
   ];
-  let func: (e: any) => StateT = _get(elem, cacheKey);
+  let func: (e?: any) => StateT = _get(elem, cacheKey);
   if (func) return func;
 
-  func = function(e: any) {
+  func = function(e?: any) {
     if (preventDefault) preventDefaultAndBlur(e);
 
     const curValue = getMixed(elem.state, stateIndex);
@@ -1109,10 +1109,10 @@ export function callProp<PropT>(
  */
 export function registerRef<T extends Object>(elem: T, variableName: Keys) {
   const cacheKey = ['__cache', JSON.stringify(['registerRef', variableName])];
-  const cached = _get(elem, cacheKey);
-  if (cached) return cached;
+  let func: (pageElem: any) => void = _get(elem, cacheKey);
+  if (func) return func;
 
-  const func = function(pageElem: any) {
+  func = function(pageElem: any) {
     _setWith(elem, variableName, pageElem, Object);
   };
 
