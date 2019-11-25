@@ -164,8 +164,8 @@ export function toggle<PropT, StateT>(
  */
 export function toggleProp<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp?: Keys | null,
   preventDefault?: boolean,
 ) {
@@ -213,8 +213,8 @@ export function toggleValue<PropT, StateT>(
  */
 export function togglePropValue<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null,
   value: any,
   preventDefault?: boolean,
@@ -260,8 +260,8 @@ export function toggleFromEvent<PropT, StateT>(
  */
 export function togglePropFromEvent<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys,
   value: any,
   preventDefault?: boolean,
@@ -336,8 +336,8 @@ export function toggleArrayMember<PropT, StateT>(
  */
 export function togglePropArrayMember<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   value: any,
   preventDefault?: boolean,
@@ -367,8 +367,8 @@ export function togglePropArrayMember<PropT>(
  */
 export function togglePropArrayMemberFromEvent<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   preventDefault?: boolean,
 ) {
@@ -396,8 +396,8 @@ export function togglePropArrayMemberFromEvent<PropT>(
  */
 export function setProp<PropT>(
   elem: React.Component<any>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   preventDefault?: boolean,
 ) {
@@ -426,8 +426,8 @@ export function setProp<PropT>(
  */
 export function setPropNumber<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   preventDefault?: boolean,
 ) {
@@ -456,8 +456,8 @@ export function setPropNumber<PropT>(
  */
 export function setPropValue<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   value: any,
   preventDefault?: boolean,
@@ -487,8 +487,8 @@ export function setPropValue<PropT>(
  */
 export function deleteProp<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys,
   preventDefault?: boolean,
 ) {
@@ -741,7 +741,7 @@ export function renderResponse(
  * @param preventDefault  whether to call preventDefault
  * @return event handler
  */
-export function all<T extends React.SyntheticEvent | Event>(
+export function all<T>(
   elem: React.Component<any>,
   handlers: Function[],
   preventDefault?: boolean,
@@ -774,7 +774,7 @@ export function all<T extends React.SyntheticEvent | Event>(
   if (cached) return cached.func as (e: T) => void;
 
   const func = function(e: T) {
-    if (preventDefault) preventDefaultAndBlur(e);
+    if (preventDefault && 'preventDefault' in e) preventDefaultAndBlur(e as any);
     const origState = elem.state;
 
     for (let i = 0; i !== handlers.length; i++) {
@@ -910,8 +910,8 @@ export function setOrNull(curValue: any, e: EventOrValue) {
  */
 export function changeProp<PropT>(
   elem: React.Component<PropT>,
-  propFunc: string,
-  propIndex: TypeSafeKeys<PropT>,
+  propFunc: keyof PropT,
+  propIndex: keyof PropT,
   indexInProp: Keys | null | undefined,
   getNewValue: GetNewValueFunc,
   preventDefault?: boolean,
@@ -948,7 +948,7 @@ export function changeProp<PropT>(
       newPropObj = getNewValue(null, e);
     }
 
-    elem.props[propFunc](newPropObj);
+    (elem.props[propFunc] as any)(newPropObj);
     return newPropObj;
   };
 
@@ -1009,7 +1009,7 @@ export function changeState<PropT, StateT>(
  */
 export function call<T extends Object>(
   elem: T,
-  funcName: TypeSafeKeys<T>,
+  funcName: keyof T,
   prefixArgs?: any[] | null,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -1035,7 +1035,7 @@ export function call<T extends Object>(
 
     const func = _get(elem, funcName);
     if (func) {
-      return func.apply(elem, callArgs);
+      return (func as any).apply(elem, callArgs);
     } else {
       return null;
     }
@@ -1057,7 +1057,7 @@ export function call<T extends Object>(
  */
 export function callProp<PropT>(
   elem: React.Component<PropT>,
-  funcName: TypeSafeKeys<PropT>,
+  funcName: keyof PropT,
   prefixArgs?: any[] | null,
   preventDefault?: boolean,
   extraCacheKey?: any,
@@ -1083,7 +1083,7 @@ export function callProp<PropT>(
 
     const func = _get(elem.props, funcName);
     if (func) {
-      return func.apply(elem, callArgs);
+      return (func as any).apply(elem, callArgs);
     } else {
       return null;
     }

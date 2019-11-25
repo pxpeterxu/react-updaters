@@ -609,7 +609,7 @@ function all(elem, handlers, preventDefault) {
   if (cached) return cached.func;
 
   var func = function func(e) {
-    if (preventDefault) preventDefaultAndBlur(e);
+    if (preventDefault && 'preventDefault' in e) preventDefaultAndBlur(e);
     var origState = elem.state;
 
     for (var _i2 = 0; _i2 !== handlers.length; _i2++) {
