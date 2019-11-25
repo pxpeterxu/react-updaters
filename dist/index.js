@@ -62,7 +62,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "d
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-/* eslint-disable prefer-rest-params */
 function preventDefault(event) {
   if (event) event.preventDefault();
 }
@@ -88,12 +87,11 @@ function preventDefaultAndBlur(event) {
 
 
 function getValueFromEventOrValue(e) {
-  return e && e.target ? e.target.value : e;
+  return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
 }
 
 function normalizeKeys(keys) {
-  if (typeof keys === 'string') keys = keys.split('.');
-  if (!(keys instanceof Array)) keys = [keys];
+  if (!(keys instanceof Array)) return [keys];
   return keys;
 }
 /**
@@ -451,8 +449,8 @@ function setState(elem, stateIndex, value, preventDefault) {
 
 
 function deleteState(elem, stateIndex, preventDefault) {
-  stateIndex = normalizeKeys(stateIndex);
-  return changeState(elem, stateIndex[0], remove(stateIndex.slice(1)), preventDefault, ['remove', stateIndex.slice(1)]);
+  var arrayStateIndex = normalizeKeys(stateIndex);
+  return changeState(elem, stateIndex[0], remove(arrayStateIndex.slice(1)), preventDefault, ['remove', arrayStateIndex.slice(1)]);
 }
 /**
  * Filters a changed state variable so that we only include
@@ -808,7 +806,9 @@ function changeState(elem, stateIndex, getNewValue, preventDefault, extraCacheKe
     if (preventDefault) preventDefaultAndBlur(e);
     var curValue = getMixed(elem.state, stateIndex);
     var newValue = getNewValue(curValue, e);
-    var newState = setMixed(elem.state, stateIndex, newValue);
+    var newState = setMixed(elem.state, stateIndex, newValue); // We need the cast because Partial<StateT> can't be assigned to the
+    // value of setState due to the stricter type-checking
+
     elem.setState(getChanged(elem.state, newState));
     return newState;
   };
@@ -883,8 +883,11 @@ function callProp(elem, funcName, prefixArgs, preventDefault, extraCacheKey) {
   return func;
 }
 /**
+ * @deprecated
+ * Prefer using `React.createRef` object-based refs instead of this function.
+ * 
  * Get a function to be used with ref={} to register a ref into
- * a variable in the current object
+ * a variable in the current object.
  * @param {Object} elem          React component (usually `this`)
  * @param {String} variableName  Name to save ref (e.g., '_elem' for this._elem)
  * @return {function} handler for ref=}}
