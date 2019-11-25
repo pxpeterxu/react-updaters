@@ -15,24 +15,9 @@ declare type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
 declare type EventOrReactEvent = Event | React.SyntheticEvent | InputChangeEvent;
 declare type EventOrValue = InputChangeEvent | string;
 declare type Key = string | number | symbol;
-/** This complex type allows us to typecheck arrays of paths up to 5 deep */
-declare type TypeSafeKeys<T, T1 extends keyof T = keyof T> = T1 | TypeSafeKeysArray<T>;
-declare type TypeSafeKeysArray<T, T1 extends keyof T = keyof T, T2 extends keyof T[T1] = keyof T[T1], T3 extends keyof T[T1][T2] = keyof T[T1][T2], T4 extends keyof T[T1][T2][T3] = keyof T[T1][T2][T3], T5 extends keyof T[T1][T2][T3][T4] = keyof T[T1][T2][T3][T4]> = TypeSafeKeysArray1<T, T1> | TypeSafeKeysArray2<T, T1, T2> | TypeSafeKeysArray3<T, T1, T2, T3> | TypeSafeKeysArray4<T, T1, T2, T3, T4> | TypeSafeKeysArray5Plus<T, T1, T2, T3, T4, T5>;
-declare type TypeSafeKeysArray1<T, T1 extends keyof T> = [T1];
-declare type TypeSafeKeysArray2<T, T1 extends keyof T, T2 extends keyof T[T1]> = [T1, T2];
-declare type TypeSafeKeysArray3<T, T1 extends keyof T, T2 extends keyof T[T1], T3 extends keyof T[T1][T2]> = [T1, T2, T3];
-declare type TypeSafeKeysArray4<T, T1 extends keyof T, T2 extends keyof T[T1], T3 extends keyof T[T1][T2], T4 extends keyof T[T1][T2][T3]> = [T1, T2, T3, T4];
-declare type TypeSafeKeysArray5Plus<T, T1 extends keyof T, T2 extends keyof T[T1], T3 extends keyof T[T1][T2], T4 extends keyof T[T1][T2][T3], T5 extends keyof T[T1][T2][T3][T4]> = [T1, T2, T3, T4, T5, ...Key[]];
-/**
- * Like TypeSafeKeys, but for `indexInProp` which excludes the prop itself.
- * Typechecks keys (including array keys) up to 5 levels deep.
- */
-declare type TypeSafeIndexInProp<T, PropK extends keyof T = keyof T, T1 extends keyof T[PropK] = keyof T[PropK], T2 extends keyof T[PropK][T1] = keyof T[PropK][T1], T3 extends keyof T[PropK][T1][T2] = keyof T[PropK][T1][T2], T4 extends keyof T[PropK][T1][T2][T3] = keyof T[PropK][T1][T2][T3], T5 extends keyof T[PropK][T1][T2][T3][T4] = keyof T[PropK][T1][T2][T3][T4]> = T1 | TypeSafeIndexInPropArray1<T, PropK, T1> | TypeSafeIndexInPropArray2<T, PropK, T1, T2> | TypeSafeIndexInPropArray3<T, PropK, T1, T2, T3> | TypeSafeIndexInPropArray4<T, PropK, T1, T2, T3, T4> | TypeSafeIndexInPropArray5Plus<T, PropK, T1, T2, T3, T4, T5>;
-declare type TypeSafeIndexInPropArray1<T, PropK extends keyof T, T1 extends keyof T[PropK]> = [T1];
-declare type TypeSafeIndexInPropArray2<T, PropK extends keyof T, T1 extends keyof T[PropK], T2 extends keyof T[PropK][T1]> = [T1, T2];
-declare type TypeSafeIndexInPropArray3<T, PropK extends keyof T, T1 extends keyof T[PropK], T2 extends keyof T[PropK][T1], T3 extends keyof T[PropK][T1][T2]> = [T1, T2, T3];
-declare type TypeSafeIndexInPropArray4<T, PropK extends keyof T, T1 extends keyof T[PropK], T2 extends keyof T[PropK][T1], T3 extends keyof T[PropK][T1][T2], T4 extends keyof T[PropK][T1][T2][T3]> = [T1, T2, T3, T4];
-declare type TypeSafeIndexInPropArray5Plus<T, PropK extends keyof T, T1 extends keyof T[PropK], T2 extends keyof T[PropK][T1], T3 extends keyof T[PropK][T1][T2], T4 extends keyof T[PropK][T1][T2][T3], T5 extends keyof T[PropK][T1][T2][T3][T4]> = [T1, T2, T3, T4, T5, ...Key[]];
+/** Type-checks a string key or the first key in an array of keys */
+declare type TypeSafeKeys<T> = keyof T | TypeSafeKeysArray<T>;
+declare type TypeSafeKeysArray<T> = [keyof T, ...Key[]];
 declare type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unknown;
 /**
  * Set a variable deep in a map/array while preserving immutable semantics
@@ -80,7 +65,7 @@ export declare function toggle<PropT, StateT>(elem: React.Component<PropT, State
  * @param indexInProp     index within the prop of the value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export declare function toggleProp<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp?: TypeSafeIndexInProp<PropT> | null, preventDefault?: boolean): (e?: any) => any;
+export declare function toggleProp<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp?: TypeSafeKeys<PropT[PropK]> | null, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will toggle the value of the given
  * state key to either the value given or null
@@ -101,7 +86,7 @@ export declare function toggleValue<PropT, StateT>(elem: React.Component<PropT, 
  * @param value           value to set (if it's not already the current value)
  * @param preventDefault  whether to preventDefault
  */
-export declare function togglePropValue<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null, value: any, preventDefault?: boolean): (e?: any) => any;
+export declare function togglePropValue<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null, value: any, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will toggle the value of the given
  * state key given by path to either the value passed (if it's
@@ -123,7 +108,7 @@ export declare function toggleFromEvent<PropT, StateT>(elem: React.Component<Pro
  * @param indexInProp     index within the prop of the value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export declare function togglePropFromEvent<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT>, value: any, preventDefault?: boolean): (e?: any) => any;
+export declare function togglePropFromEvent<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]>, value: any, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will toggle whether a value is present
  * in an array at the given state key (by adding or removing it);
@@ -154,7 +139,7 @@ export declare function toggleArrayMember<PropT, StateT>(elem: React.Component<P
  * @param value           value to toggle
  * @param preventDefault  whether to preventDefault
  */
-export declare function togglePropArrayMember<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, value: any, preventDefault?: boolean): (e?: any) => any;
+export declare function togglePropArrayMember<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, value: any, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will toggle whether a value (passed in
  * as an argument) should be in an array at the given prop key
@@ -167,7 +152,7 @@ export declare function togglePropArrayMember<PropT>(elem: React.Component<PropT
  *                        if propIndex already points to the array)
  * @param preventDefault  whether to preventDefault
  */
-export declare function togglePropArrayMemberFromEvent<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, preventDefault?: boolean): (e?: any) => any;
+export declare function togglePropArrayMemberFromEvent<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information given
@@ -179,7 +164,7 @@ export declare function togglePropArrayMemberFromEvent<PropT>(elem: React.Compon
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setProp<PropT>(elem: React.Component<any>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, preventDefault?: boolean): (e?: any) => any;
+export declare function setProp<PropT, PropK extends keyof PropT>(elem: React.Component<any>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the information from an event
@@ -192,7 +177,7 @@ export declare function setProp<PropT>(elem: React.Component<any>, propFunc: key
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setPropNumber<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, preventDefault?: boolean): (e?: any) => any;
+export declare function setPropNumber<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will set the value of a prop
  * to a set value
@@ -205,7 +190,7 @@ export declare function setPropNumber<PropT>(elem: React.Component<PropT>, propF
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function setPropValue<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, value: any, preventDefault?: boolean): (e?: any) => any;
+export declare function setPropValue<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, value: any, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get an event handler that will delete a certain key from a prop
  * and then call an onChange handler; works for both arrays and
@@ -218,7 +203,7 @@ export declare function setPropValue<PropT>(elem: React.Component<PropT>, propFu
  * @param preventDefault  whether to preventDefault
  * @return function to handle events or values being changed
  */
-export declare function deleteProp<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT>, preventDefault?: boolean): (e?: any) => any;
+export declare function deleteProp<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]>, preventDefault?: boolean): (e?: any) => any;
 /**
  * Get a function that will update a part of the current element's
  * state based on the stateIndex passed
@@ -363,7 +348,7 @@ export declare function setOrNull(curValue: any, e: EventOrValue): string | null
  * @param extraCacheKey   extra data for the cache key (e.g., for data in changeFunc)
  * @return function to handle events or values being changed
  */
-export declare function changeProp<PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: keyof PropT, indexInProp: TypeSafeIndexInProp<PropT> | null | undefined, getNewValue: GetNewValueFunc, preventDefault?: boolean, extraCacheKey?: any): (e?: any) => any;
+export declare function changeProp<PropT, PropK extends keyof PropT>(elem: React.Component<PropT>, propFunc: keyof PropT, propIndex: PropK, indexInProp: TypeSafeKeys<PropT[PropK]> | null | undefined, getNewValue: GetNewValueFunc, preventDefault?: boolean, extraCacheKey?: any): (e?: any) => any;
 /**
  * Get an event handler that will set the value of a state
  * based on the "getNewValue" function supplied
