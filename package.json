@@ -1,6 +1,6 @@
 {
   "name": "react-updaters",
-  "version": "2.1.4",
+  "version": "3.0.0",
   "description": "Updaters and React handlers to change state and props preserving immutable semantics",
   "sideEffects": false,
   "main": "dist/index.js",
