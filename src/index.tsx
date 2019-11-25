@@ -23,7 +23,11 @@ export function preventDefaultAndBlur(eventOrAny: any) {
   if (event && eventOrAny.preventDefault) {
     event.preventDefault();
     event.stopPropagation();
-    if (event.target && 'blur' in event.target) {
+    if (
+      event.target &&
+      typeof event.target === 'object' &&
+      'blur' in event.target
+    ) {
       event.target.blur();
     }
   }
@@ -35,9 +39,21 @@ export function preventDefaultAndBlur(eventOrAny: any) {
  */
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
 type EventOrReactEvent = Event | React.SyntheticEvent | InputChangeEvent;
-type EventOrValue = InputChangeEvent | string;
-function getValueFromEventOrValue(e: EventOrValue) {
-  return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
+function getValueFromEventOrValue(eventOrValueAny: any) {
+  if (
+    eventOrValueAny &&
+    typeof eventOrValueAny === 'object' &&
+    'target' in eventOrValueAny
+  ) {
+    const event: EventOrReactEvent = eventOrValueAny;
+    return event.target &&
+      typeof event.target === 'object' &&
+      'value' in event.target
+      ? event.target.value
+      : undefined;
+  } else {
+    return eventOrValueAny;
+  }
 }
 
 type Key = string | number | symbol;
@@ -46,7 +62,7 @@ type Key = string | number | symbol;
 type TypeSafeKeys<T> = keyof T | TypeSafeKeysArray<T>;
 type TypeSafeKeysArray<T> = [keyof T, ...Key[]];
 
-type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unknown;
+type GetNewValueFunc = (curValue: unknown, eventOrValue: any) => unknown;
 
 function normalizeKeys<T>(keys: TypeSafeKeys<T>): TypeSafeKeysArray<T>;
 
@@ -825,16 +841,16 @@ export function all(
  * getNewValue (updater) function that sets the value to that
  * received in the event
  */
-export function fromEvent(curValue: unknown, e: EventOrValue) {
-  return getValueFromEventOrValue(e);
+export function fromEvent(curValue: unknown, eventOrValue: any) {
+  return getValueFromEventOrValue(eventOrValue);
 }
 
 /**
  * getNewValue (updater) function that sets the value to that
  * received in the event, cast to a number
  */
-export function numberFromEvent(curValue: unknown, e: EventOrValue) {
-  const value = parseFloat(getValueFromEventOrValue(e));
+export function numberFromEvent(curValue: unknown, eventOrValue: any) {
+  const value = parseFloat(getValueFromEventOrValue(eventOrValue));
   return isNaN(value) ? null : value;
 }
 
@@ -879,10 +895,7 @@ export function toggleMembership(value: unknown) {
  * adds or splices a value (from an event or caller)
  * from an array based on whether it's in the array
  */
-export function toggleMembershipFromEvent(
-  curValue: unknown[],
-  event: EventOrValue,
-) {
+export function toggleMembershipFromEvent<T>(curValue: T[], event: any) {
   const value = getValueFromEventOrValue(event);
   const index = curValue.indexOf(value);
   if (index === -1) {
@@ -913,8 +926,8 @@ export function toggleConstant<T>(value: T | null) {
  * getNewValue (updater) function that sets the value to that from an event,
  * or if it's already the same, nulls it
  */
-export function setOrNull(curValue: any, e: EventOrValue) {
-  const value = getValueFromEventOrValue(e);
+export function setOrNull(curValue: any, eventOrValue: any) {
+  const value = getValueFromEventOrValue(eventOrValue);
   return curValue === value ? null : value;
 }
 

@@ -13,12 +13,11 @@ export declare function preventDefaultAndBlur(eventOrAny: any): void;
  */
 declare type InputChangeEvent = React.ChangeEvent<HTMLInputElement>;
 declare type EventOrReactEvent = Event | React.SyntheticEvent | InputChangeEvent;
-declare type EventOrValue = InputChangeEvent | string;
 declare type Key = string | number | symbol;
 /** Type-checks a string key or the first key in an array of keys */
 declare type TypeSafeKeys<T> = keyof T | TypeSafeKeysArray<T>;
 declare type TypeSafeKeysArray<T> = [keyof T, ...Key[]];
-declare type GetNewValueFunc = (curValue: unknown, event: EventOrValue) => unknown;
+declare type GetNewValueFunc = (curValue: unknown, eventOrValue: any) => unknown;
 /**
  * Set a variable deep in a map/array while preserving immutable semantics
  * @param obj         object to set
@@ -294,12 +293,12 @@ export declare function all(elem: React.Component<any>, handlers: Function[], pr
  * getNewValue (updater) function that sets the value to that
  * received in the event
  */
-export declare function fromEvent(curValue: unknown, e: EventOrValue): string;
+export declare function fromEvent(curValue: unknown, eventOrValue: any): any;
 /**
  * getNewValue (updater) function that sets the value to that
  * received in the event, cast to a number
  */
-export declare function numberFromEvent(curValue: unknown, e: EventOrValue): number | null;
+export declare function numberFromEvent(curValue: unknown, eventOrValue: any): number | null;
 /**
  * Generator of a getNewValue (updater) function that
  * sets the value to a constant specified ahead of time
@@ -321,7 +320,7 @@ export declare function toggleMembership(value: unknown): (curValue: unknown[]) 
  * adds or splices a value (from an event or caller)
  * from an array based on whether it's in the array
  */
-export declare function toggleMembershipFromEvent(curValue: unknown[], event: EventOrValue): unknown[];
+export declare function toggleMembershipFromEvent<T>(curValue: T[], event: any): T[];
 /**
  * getNewValue (updater) function that negates the value
  */
@@ -335,7 +334,7 @@ export declare function toggleConstant<T>(value: T | null): (curValue: T | null)
  * getNewValue (updater) function that sets the value to that from an event,
  * or if it's already the same, nulls it
  */
-export declare function setOrNull(curValue: any, e: EventOrValue): string | null;
+export declare function setOrNull(curValue: any, eventOrValue: any): any;
 /**
  * Get an event handler that will set the value of a prop
  * based on the "getNewValue" function supplied

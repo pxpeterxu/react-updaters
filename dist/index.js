@@ -84,7 +84,7 @@ function preventDefaultAndBlur(eventOrAny) {
     event.preventDefault();
     event.stopPropagation();
 
-    if (event.target && 'blur' in event.target) {
+    if (event.target && _typeof(event.target) === 'object' && 'blur' in event.target) {
       event.target.blur();
     }
   }
@@ -95,8 +95,13 @@ function preventDefaultAndBlur(eventOrAny) {
  */
 
 
-function getValueFromEventOrValue(e) {
-  return e && typeof e !== 'string' && 'target' in e ? e.target.value : e;
+function getValueFromEventOrValue(eventOrValueAny) {
+  if (eventOrValueAny && _typeof(eventOrValueAny) === 'object' && 'target' in eventOrValueAny) {
+    var _event = eventOrValueAny;
+    return _event.target && _typeof(_event.target) === 'object' && 'value' in _event.target ? _event.target.value : undefined;
+  } else {
+    return eventOrValueAny;
+  }
 }
 
 function normalizeKeys(keys) {
@@ -647,8 +652,8 @@ function all(elem, handlers, preventDefault) {
  */
 
 
-function fromEvent(curValue, e) {
-  return getValueFromEventOrValue(e);
+function fromEvent(curValue, eventOrValue) {
+  return getValueFromEventOrValue(eventOrValue);
 }
 /**
  * getNewValue (updater) function that sets the value to that
@@ -656,8 +661,8 @@ function fromEvent(curValue, e) {
  */
 
 
-function numberFromEvent(curValue, e) {
-  var value = parseFloat(getValueFromEventOrValue(e));
+function numberFromEvent(curValue, eventOrValue) {
+  var value = parseFloat(getValueFromEventOrValue(eventOrValue));
   return isNaN(value) ? null : value;
 }
 /**
@@ -746,8 +751,8 @@ function toggleConstant(value) {
  */
 
 
-function setOrNull(curValue, e) {
-  var value = getValueFromEventOrValue(e);
+function setOrNull(curValue, eventOrValue) {
+  var value = getValueFromEventOrValue(eventOrValue);
   return curValue === value ? null : value;
 }
 /**
